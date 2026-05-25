@@ -1,5 +1,6 @@
 import { Worker } from 'bullmq';
 import { PrismaClient } from '@foodmarket/database';
+import { toInputJsonValue } from './prisma-json';
 
 const connection = {
   host: process.env.REDIS_HOST || 'localhost',
@@ -61,7 +62,7 @@ const notificationsWorker = new Worker(
           type: 'ORDER_UPDATE',
           title,
           body,
-          data: data ?? undefined,
+          data: toInputJsonValue(data),
           sentAt: new Date(),
         },
       });
