@@ -8,7 +8,6 @@ export class UsersService {
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
-      include: { role: true, addresses: true },
       select: {
         id: true,
         email: true,
@@ -17,7 +16,7 @@ export class UsersService {
         lastName: true,
         avatarUrl: true,
         isGuest: true,
-        role: true,
+        role: { select: { id: true, name: true } },
         addresses: true,
         createdAt: true,
       },

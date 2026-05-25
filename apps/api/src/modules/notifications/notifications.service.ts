@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { toInputJsonValue } from '../../common/utils/prisma-json';
 
 @Injectable()
 export class NotificationsService {
@@ -35,7 +36,7 @@ export class NotificationsService {
         type: 'ORDER_UPDATE',
         title,
         body,
-        data: data ?? undefined,
+        data: toInputJsonValue(data),
       },
     });
   }

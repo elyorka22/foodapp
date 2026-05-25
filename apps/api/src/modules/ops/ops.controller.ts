@@ -10,6 +10,12 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AssignCourierDto } from './dto/assign-courier.dto';
 import { OpsNoteDto } from './dto/ops-note.dto';
 import { EmergencyCancelDto } from './dto/emergency-cancel.dto';
+import {
+  AssignIncidentDto,
+  CreateIncidentDto,
+  ResolveIncidentDto,
+  UpdateIncidentStatusDto,
+} from './dto/incident.dto';
 
 @ApiTags('ops')
 @Controller('ops')
@@ -96,7 +102,7 @@ export class OpsController {
 
   @Get('incidents-audit')
   incidentsAudit(@Query('limit') limit?: number) {
-    return this.ops.incidents(Number(limit) || 50);
+    return this.ops.listOpsAuditIncidents(Number(limit) || 50);
   }
 
   @Get('suspicious')

@@ -18,7 +18,7 @@ export class OpsService {
     private orders: OrdersService,
     private audit: AuditService,
     private dispatch: DispatchService,
-    private incidents: IncidentsService,
+    private incidentsService: IncidentsService,
     private tracking: TrackingGateway,
     @InjectQueue('telegram') private telegramQueue: Queue,
     @InjectQueue('orders') private ordersQueue: Queue,
@@ -31,7 +31,7 @@ export class OpsService {
       this.dispatch.dispatchOverview(),
       this.restaurantMonitor(),
       this.queueSnapshot(),
-      this.incidents(10),
+      this.listOpsAuditIncidents(10),
     ]);
     return { board, dispatch, restaurants, queues, recentIncidents: incidents };
   }
@@ -259,7 +259,7 @@ export class OpsService {
       },
     });
     await this.logOps(actorId, 'ops.order.failed', orderId, { reason });
-    await this.incidents.create(
+    await this.incidentsService.create(
       {
         type: 'FAILED_DELIVERY',
         severity: 'HIGH',
@@ -290,7 +290,7 @@ export class OpsService {
     return { ok: true, action };
   }
 
-  async incidents(limit = 50) {
+  async listOpsAuditIncidents(limit = 50) {
     return this.prisma.auditLog.findMany({
       where: { action: { startsWith: 'ops.' } },
       orderBy: { createdAt: 'desc' },

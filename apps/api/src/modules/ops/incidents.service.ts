@@ -151,7 +151,15 @@ export class IncidentsService {
         restaurantId: input.restaurantId,
       },
     });
-    await this.logIncident(actorId, 'incident.created', incident.id, input);
+    await this.logIncident(actorId, 'incident.created', incident.id, {
+      type: input.type,
+      severity: input.severity ?? 'MEDIUM',
+      title: input.title,
+      description: input.description ?? null,
+      orderId: input.orderId ?? null,
+      courierId: input.courierId ?? null,
+      restaurantId: input.restaurantId ?? null,
+    });
     return incident;
   }
 
