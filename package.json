@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "dev:api": "npm run dev -w @foodmarket/api",
-    "dev:customer": "npm run dev -w @foodmarket/customer",
+    "dev:web": "npm run dev -w @foodmarket/web",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "db:generate": "npm run generate -w @foodmarket/database",

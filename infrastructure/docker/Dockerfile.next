@@ -1,4 +1,5 @@
-ARG APP_NAME=customer
+# Unified FoodMarket frontend (single Next.js app)
+ARG APP_NAME=web
 ARG APP_PORT=3000
 FROM node:20-alpine AS base
 WORKDIR /app
@@ -9,7 +10,8 @@ COPY package.json package-lock.json* ./
 COPY apps/${APP_NAME}/package.json ./apps/${APP_NAME}/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/shared-types/package.json ./packages/shared-types/
-RUN npm ci --workspace=@foodmarket/${APP_NAME} --workspace=@foodmarket/ui --include-workspace-root 2>/dev/null || npm install --workspace=@foodmarket/${APP_NAME} --workspace=@foodmarket/ui --include-workspace-root
+RUN npm ci --workspace=@foodmarket/${APP_NAME} --workspace=@foodmarket/ui --workspace=@foodmarket/shared-types --include-workspace-root 2>/dev/null \
+  || npm install --workspace=@foodmarket/${APP_NAME} --workspace=@foodmarket/ui --workspace=@foodmarket/shared-types --include-workspace-root
 
 FROM base AS builder
 ARG APP_NAME

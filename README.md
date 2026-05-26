@@ -8,20 +8,26 @@ Inspired by Glovo, Wolt, and Uber Eats: clean white UI, green accents, mobile-fi
 
 | Layer | Technology |
 |-------|------------|
-| Customer & panels | Next.js 15, Tailwind, TypeScript |
+| Frontend (unified) | Next.js 15 App Router, Tailwind, TypeScript |
 | API | NestJS (modular, microservice-ready) |
 | Database | PostgreSQL + Prisma |
 | Cache/queues | Redis + BullMQ |
 | Realtime | Socket.IO `/tracking` |
 | Deploy | Docker Compose + Nginx |
 
-## Applications
+## Frontend (`apps/web`)
 
-1. **Customer** (`apps/customer`) — browse, cart, guest checkout, live tracking  
-2. **Admin** (`apps/admin`) — platform analytics, vendors, promos  
-3. **Restaurant** (`apps/restaurant`) — menu CRUD, order pipeline  
-4. **Business** (`apps/business`) — grocery/flowers/shops, inventory  
-5. **Courier** (`apps/courier`) — GPS tracking, delivery workflow  
+Single Next.js app — all panels on one origin (lower VPS cost):
+
+| Path | Role |
+|------|------|
+| `/` | Customer — browse, cart, checkout, tracking |
+| `/admin` | Platform ops, analytics, incidents |
+| `/restaurant` | Menu & orders |
+| `/business` | Grocery / shops |
+| `/courier` | GPS & deliveries |
+
+See [docs/MIGRATION-FRONTEND.md](docs/MIGRATION-FRONTEND.md).
 
 ## Quick start
 
@@ -32,25 +38,21 @@ docker compose up -d
 npm run db:generate && npm run db:migrate && npm run db:seed
 ```
 
-Run services (separate terminals):
+Run services:
 
 ```bash
 npm run dev:api
 npm run dev -w foodmarket-workers
-npm run dev:customer
-npm run dev -w @foodmarket/admin
-npm run dev -w @foodmarket/restaurant
-npm run dev -w @foodmarket/business
-npm run dev -w @foodmarket/courier
+npm run dev:web
 ```
 
 | Service | URL |
 |---------|-----|
-| Customer | http://localhost:3000 |
-| Admin | http://localhost:3001 |
-| Restaurant | http://localhost:3002 |
-| Business | http://localhost:3003 |
-| Courier | http://localhost:3004 |
+| Web (all panels) | http://localhost:3000 |
+| Admin | http://localhost:3000/admin |
+| Restaurant panel | http://localhost:3000/restaurant |
+| Business | http://localhost:3000/business |
+| Courier | http://localhost:3000/courier |
 | API | http://localhost:4000/api/v1 |
 | Swagger | http://localhost:4000/docs |
 
