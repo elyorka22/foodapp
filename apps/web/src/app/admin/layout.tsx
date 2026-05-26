@@ -1,7 +1,11 @@
-import '../globals.css';
+'use client';
 
-export const metadata = { title: 'FoodMarket — Admin panel' };
+import { AuthGate } from '@/components/auth/AuthGate';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen bg-gray-50">{children}</div>;
+  return (
+    <AuthGate roles={['ADMIN', 'MANAGER', 'OPERATOR']}>
+      <div className="min-h-screen bg-gray-50">{children}</div>
+    </AuthGate>
+  );
 }

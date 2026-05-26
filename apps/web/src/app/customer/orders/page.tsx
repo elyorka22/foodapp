@@ -49,7 +49,7 @@ export default function OrdersPage() {
         <h1 className="text-xl font-bold">{t('orders.title')}</h1>
         {!getToken() && (
           <p className="text-sm text-gray-500 mt-2">
-            <Link href={customerPath('/account')} className="text-brand-600 font-semibold">
+            <Link href="/profile" className="text-brand-600 font-semibold">
               {t('orders.signIn')}
             </Link>{' '}
             {t('orders.signInHint')}

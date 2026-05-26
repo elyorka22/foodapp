@@ -12,6 +12,8 @@ datasource db {
 enum UserRole {
   CUSTOMER
   ADMIN
+  MANAGER
+  OPERATOR
   RESTAURANT_OWNER
   BUSINESS_OWNER
   COURIER

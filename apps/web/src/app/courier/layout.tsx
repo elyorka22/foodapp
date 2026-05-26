@@ -1,5 +1,11 @@
-export const metadata = { title: 'FoodMarket Courier' };
+'use client';
+
+import { AuthGate } from '@/components/auth/AuthGate';
 
 export default function CourierLayout({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen bg-gray-50">{children}</div>;
+  return (
+    <AuthGate roles={['COURIER', 'ADMIN']}>
+      <div className="min-h-screen bg-gray-50">{children}</div>
+    </AuthGate>
+  );
 }

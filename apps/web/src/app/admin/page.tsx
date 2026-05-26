@@ -3,7 +3,8 @@
 import { Sidebar, StatCard } from '@foodmarket/ui';
 import { useEffect, useState } from 'react';
 import { panelApi } from '@/lib/panel-api';
-import { getAdminNav } from '@/lib/admin-nav';
+import { useAdminNav } from '@/lib/hooks/use-admin-nav';
+import { getAuthToken } from '@/store/auth';
 import { t } from '@/i18n';
 
 interface Dashboard {
@@ -22,12 +23,13 @@ function formatUzs(n: number) {
 }
 
 export default function AdminDashboard() {
+  const adminNav = useAdminNav();
   const [stats, setStats] = useState<Dashboard | null>(null);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
+    const token = getAuthToken();
     if (!token) return;
     const q = new URLSearchParams();
     if (from) q.set('from', from);
@@ -41,7 +43,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen md:pl-64">
-      <Sidebar title={t('roles.admin')} items={getAdminNav()} accent="FoodMarket UZ" />
+      <Sidebar title={t('roles.admin')} items={adminNav} accent="FoodMarket UZ" />
       <main className="p-6 md:p-8">
         <h1 className="text-2xl font-bold">{t('admin.title')}</h1>
         <div className="flex gap-2 mt-4">

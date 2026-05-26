@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { permissionsFromRoleJson } from '../../common/utils/role-permissions';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -39,7 +40,7 @@ export class AuthService {
       },
       include: { role: true },
     });
-    return this.issueTokens(user.id, user.email, user.role.name);
+    return this.issueTokens(user.id);
   }
 
   async login(dto: LoginDto) {
@@ -47,7 +48,7 @@ export class AuthService {
       where: { email: dto.email },
       include: { role: true },
     });
-    if (!user?.passwordHash) {
+    if (!user?.passwordHash || !user.isActive) {
       await this.audit.log({
         action: 'auth.login.failed',
         entityType: 'User',
@@ -66,7 +67,13 @@ export class AuthService {
       this.logger.warn(`Failed login attempt for ${dto.email}`);
       throw new UnauthorizedException('Invalid credentials');
     }
-    return this.issueTokens(user.id, user.email, user.role.name);
+    await this.audit.log({
+      action: 'auth.login.success',
+      entityType: 'User',
+      entityId: user.id,
+      actorId: user.id,
+    }).catch(() => {});
+    return this.issueTokens(user.id);
   }
 
   async guestSession() {
@@ -75,7 +82,7 @@ export class AuthService {
       data: { isGuest: true, roleId: role.id },
       include: { role: true },
     });
-    return this.issueTokens(user.id, null, user.role.name);
+    return this.issueTokens(user.id);
   }
 
   async refresh(refreshToken: string) {
@@ -83,36 +90,88 @@ export class AuthService {
       where: { token: refreshToken },
       include: { user: { include: { role: true } } },
     });
-    if (!stored || stored.expiresAt < new Date()) {
+    if (!stored || stored.expiresAt < new Date() || !stored.user.isActive) {
       throw new UnauthorizedException('Invalid refresh token');
     }
     await this.prisma.refreshToken.delete({ where: { id: stored.id } });
-    return this.issueTokens(stored.user.id, stored.user.email, stored.user.role.name);
+    return this.issueTokens(stored.user.id);
   }
 
-  private async issueTokens(userId: string, email: string | null, role: UserRole) {
-    const payload = { sub: userId, email, role };
-    const accessToken = this.jwt.sign(payload);
-    const refreshToken = this.jwt.sign(payload, {
-      secret: this.config.get('JWT_REFRESH_SECRET'),
-      expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN', '30d'),
+  async logout(userId: string, refreshToken?: string) {
+    if (refreshToken) {
+      await this.prisma.refreshToken.deleteMany({ where: { userId, token: refreshToken } });
+    } else {
+      await this.prisma.refreshToken.deleteMany({ where: { userId } });
+    }
+    await this.audit.log({
+      action: 'auth.logout',
+      entityType: 'User',
+      entityId: userId,
+      actorId: userId,
+    }).catch(() => {});
+    return { success: true };
+  }
+
+  async me(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
     });
+    if (!user || !user.isActive) throw new UnauthorizedException();
+    const permissions = permissionsFromRoleJson(user.role.permissions);
+    return {
+      id: user.id,
+      email: user.email,
+      phone: user.phone,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      avatarUrl: user.avatarUrl,
+      isGuest: user.isGuest,
+      role: user.role.name,
+      permissions,
+    };
+  }
+
+  private async issueTokens(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true },
+    });
+    if (!user || !user.isActive) throw new UnauthorizedException('User inactive');
+
+    const permissions = permissionsFromRoleJson(user.role.permissions);
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role.name,
+      permissions,
+    };
+    const accessToken = this.jwt.sign(payload);
+    const refreshToken = this.jwt.sign(
+      { sub: user.id },
+      {
+        secret: this.config.get('JWT_REFRESH_SECRET'),
+        expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN', '30d'),
+      },
+    );
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
     await this.prisma.refreshToken.create({
       data: { token: refreshToken, userId, expiresAt },
     });
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        isGuest: true,
-        role: { select: { name: true } },
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isGuest: user.isGuest,
+        role: { name: user.role.name },
+        permissions,
       },
-    });
-    return { accessToken, refreshToken, user };
+    };
   }
 }

@@ -8,16 +8,17 @@ import { t } from '@/i18n';
 import { apiClient } from '@/lib/api';
 import {
   validateRegister,
-  setAuthSession,
   splitFullName,
   normalizePhone,
   type RegisterFormData,
 } from '@/lib/auth';
-import { customerPath } from '@/lib/paths';
+import { useAuthStore } from '@/store/auth';
+import { PROFILE_PATH, LOGIN_PATH } from '@/lib/auth/constants';
 
 export function RegisterForm() {
   const router = useRouter();
   const { toast } = useToast();
+  const login = useAuthStore((s) => s.login);
   const [form, setForm] = useState<RegisterFormData>({
     name: '',
     phone: '+998',
@@ -50,9 +51,9 @@ export function RegisterForm() {
         firstName,
         lastName,
       });
-      setAuthSession(res.accessToken, res.refreshToken);
+      login(res.accessToken, res.refreshToken, res.user);
       toast(t('auth.registerSuccess'), 'success');
-      router.push(customerPath('/'));
+      router.push(PROFILE_PATH);
       router.refresh();
     } catch (err) {
       const msg = (err as Error).message;
@@ -115,7 +116,7 @@ export function RegisterForm() {
       </Button>
       <p className="text-center text-sm text-gray-600">
         {t('auth.hasAccount')}{' '}
-        <Link href={customerPath('/account')} className="font-semibold text-brand-600">
+        <Link href={LOGIN_PATH} className="font-semibold text-brand-600">
           {t('auth.signIn')}
         </Link>
       </p>

@@ -204,6 +204,24 @@ export const uz = {
     title: "Profil",
     subtitle: "Ixtiyoriy kirish yoki mehmon sifatida davom eting",
   },
+  profile: {
+    title: "Profil",
+    subtitle: "Hisobingiz va buyurtmalar",
+    role: "Rol",
+    openPanel: "Panelni ochish",
+    logout: "Chiqish",
+    noOrders: "Buyurtmalar yo'q.",
+    browse: "Ko'rish",
+    allOrders: "Barcha buyurtmalar",
+    noAddresses: "Saqlangan manzillar yo'q.",
+    settingsHint: "Hisob sozlamalari va chiqish.",
+    tabs: {
+      info: "Ma'lumot",
+      orders: "Buyurtmalar",
+      addresses: "Manzillar",
+      settings: "Sozlamalar",
+    },
+  },
   admin: {
     nav: {
       dashboard: "Boshqaruv paneli",
@@ -213,6 +231,7 @@ export const uz = {
       analytics: "Tahlil",
       orders: "Buyurtmalar",
       vendors: "Hamkorlar",
+      users: "Foydalanuvchilar",
     },
     title: "Platforma ko'rinishi",
     dashboard: {
@@ -233,6 +252,19 @@ export const uz = {
       colTotal: "Jami",
       colDistance: "Masofa",
       empty: "API ulang va autentifikatsiya qiling",
+    },
+    users: {
+      title: "Foydalanuvchilar",
+      subtitle: "Rollarni boshqarish va xodim hisoblarini yaratish",
+      createStaff: "Xodim yaratish",
+      create: "Yaratish",
+      role: "Rol",
+      status: "Holat",
+      actions: "Amallar",
+      active: "Faol",
+      inactive: "Nofaol",
+      deactivate: "O'chirish",
+      tempPassword: "Vaqtinchalik parol",
     },
     ops: {
       title: "Operatsiyalar markazi",

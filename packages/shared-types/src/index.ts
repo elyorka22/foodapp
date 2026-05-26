@@ -1,9 +1,32 @@
 export type UserRole =
   | 'CUSTOMER'
   | 'ADMIN'
+  | 'MANAGER'
+  | 'OPERATOR'
   | 'RESTAURANT_OWNER'
   | 'BUSINESS_OWNER'
   | 'COURIER';
+
+export type PermissionSlug =
+  | 'manage_users'
+  | 'manage_roles'
+  | 'manage_orders'
+  | 'manage_products'
+  | 'manage_dispatch'
+  | 'manage_businesses'
+  | 'manage_restaurants'
+  | 'manage_settings';
+
+export const ALL_PERMISSIONS: PermissionSlug[] = [
+  'manage_users',
+  'manage_roles',
+  'manage_orders',
+  'manage_products',
+  'manage_dispatch',
+  'manage_businesses',
+  'manage_restaurants',
+  'manage_settings',
+];
 
 export type OrderStatus =
   | 'PENDING'
@@ -79,3 +102,5 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   CANCELLED: 'Bekor qilindi',
   REFUNDED: 'Qaytarildi',
 };
+
+export * from './rbac';

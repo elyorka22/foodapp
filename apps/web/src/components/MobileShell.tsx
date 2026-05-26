@@ -11,7 +11,7 @@ const navItems = () => [
   { href: customerPath('/restaurants'), label: t('nav.food'), icon: <FoodIcon /> },
   { href: customerPath('/shops'), label: t('nav.shops'), icon: <ShopIcon /> },
   { href: customerPath('/orders'), label: t('nav.orders'), icon: <OrdersIcon /> },
-  { href: customerPath('/account'), label: t('nav.account'), icon: <AccountIcon /> },
+  { href: '/profile', label: t('nav.account'), icon: <AccountIcon /> },
 ];
 
 export function MobileShell({ children, cartBump = 0 }: { children: React.ReactNode; cartBump?: number }) {

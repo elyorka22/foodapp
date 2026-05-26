@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { t } from '@/i18n';
-import { customerPath } from '@/lib/paths';
+import { PROFILE_PATH } from '@/lib/auth/constants';
 
 export function HomeTopBar() {
   return (
@@ -20,7 +20,7 @@ export function HomeTopBar() {
             </p>
           </button>
           <Link
-            href={customerPath('/account')}
+            href={PROFILE_PATH}
             className="relative w-11 h-11 rounded-2xl bg-white border border-gray-100 shadow-card flex items-center justify-center active:scale-95 transition-transform touch-auto min-h-0 min-w-0"
             aria-label={t('home.notifications')}
           >

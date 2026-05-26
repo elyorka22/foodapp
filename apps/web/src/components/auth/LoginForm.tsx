@@ -2,21 +2,26 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Input, useToast } from '@foodmarket/ui';
 import { t } from '@/i18n';
 import { apiClient } from '@/lib/api';
-import { validateLogin, setAuthSession, type LoginFormData } from '@/lib/auth';
-import { customerPath } from '@/lib/paths';
+import { validateLogin } from '@/lib/auth';
+import { useAuthStore } from '@/store/auth';
+import { homeForRole } from '@/lib/auth/constants';
+import { REGISTER_PATH } from '@/lib/auth/constants';
+import type { UserRole } from '@foodmarket/shared-types';
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
-  const [form, setForm] = useState<LoginFormData>({ email: '', password: '' });
+  const login = useAuthStore((s) => s.login);
+  const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  function update(field: keyof LoginFormData, value: string) {
+  function update(field: 'email' | 'password', value: string) {
     setForm((f) => ({ ...f, [field]: value }));
     setErrors((e) => ({ ...e, [field]: '' }));
   }
@@ -31,9 +36,11 @@ export function LoginForm() {
     setLoading(true);
     try {
       const res = await apiClient.login(form.email.trim(), form.password);
-      setAuthSession(res.accessToken, res.refreshToken);
+      login(res.accessToken, res.refreshToken, res.user);
       toast(t('auth.loginSuccess'), 'success');
-      router.push(customerPath('/'));
+      const returnUrl = searchParams.get('returnUrl');
+      const role = res.user.role.name as UserRole;
+      router.push(returnUrl && !returnUrl.startsWith('/login') ? returnUrl : homeForRole(role));
       router.refresh();
     } catch (err) {
       const msg = (err as Error).message;
@@ -68,7 +75,7 @@ export function LoginForm() {
       </Button>
       <p className="text-center text-sm text-gray-600">
         {t('auth.noAccount')}{' '}
-        <Link href={customerPath('/register')} className="font-semibold text-brand-600">
+        <Link href={REGISTER_PATH} className="font-semibold text-brand-600">
           {t('auth.signUp')}
         </Link>
       </p>

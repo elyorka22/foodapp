@@ -5,8 +5,12 @@ export function formatUzs(amount: number) {
   return `${Math.round(amount).toLocaleString('uz-UZ')} so'm`;
 }
 
+const ACCESS_COOKIE = 'fm_access';
+
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
+  const match = document.cookie.match(new RegExp(`(?:^|; )${ACCESS_COOKIE}=([^;]*)`));
+  if (match) return decodeURIComponent(match[1]);
   return localStorage.getItem('accessToken');
 }
 
@@ -146,6 +150,31 @@ export interface AuthUser {
   lastName: string | null;
   isGuest?: boolean;
   role: { name: string };
+  permissions?: string[];
+}
+
+export interface MeResponse {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  avatarUrl: string | null;
+  isGuest: boolean;
+  role: string;
+  permissions: string[];
+}
+
+export interface AdminUserRow {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  isActive: boolean;
+  isGuest: boolean;
+  role: { id: string; name: string };
+  createdAt: string;
 }
 
 export interface AuthTokens {
@@ -198,6 +227,37 @@ export const apiClient = {
       method: 'POST',
       body: JSON.stringify({ ...body, role: 'CUSTOMER' }),
     }),
+  me: (token: string) => api<MeResponse>('/auth/me', { token }),
+  refresh: (refreshToken: string) =>
+    api<AuthTokens>('/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    }),
+  logout: (token: string, refreshToken?: string) =>
+    api<{ success: boolean }>('/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+      token,
+    }),
+  adminUsers: (token: string, page = 1) =>
+    api<{ items: AdminUserRow[]; total: number }>(`/admin/users?page=${page}&limit=20`, { token }),
+  createStaff: (
+    token: string,
+    body: { email: string; password: string; role: string; firstName?: string; lastName?: string },
+  ) =>
+    api<{ user: AdminUserRow; temporaryPassword: string }>('/admin/users/staff', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      token,
+    }),
+  assignUserRole: (token: string, userId: string, role: string) =>
+    api(`/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+      token,
+    }),
+  deactivateUser: (token: string, userId: string) =>
+    api(`/admin/users/${userId}/deactivate`, { method: 'PATCH', token }),
   createAddress: (body: Partial<Address>, token?: string) =>
     api<Address>('/addresses', { method: 'POST', body: JSON.stringify(body), token }),
   myAddresses: (token: string) => api<Address[]>('/addresses/me', { token }),

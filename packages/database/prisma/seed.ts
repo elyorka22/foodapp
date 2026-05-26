@@ -7,11 +7,40 @@ const TASHKENT = { lat: 41.2995, lng: 69.2401 };
 
 async function main() {
   const roles = [
-    { name: UserRole.ADMIN, description: 'Administrator', permissions: ['*'] },
-    { name: UserRole.CUSTOMER, description: 'Customer', permissions: ['orders:create'] },
-    { name: UserRole.RESTAURANT_OWNER, description: 'Restaurant', permissions: ['restaurant:manage'] },
-    { name: UserRole.BUSINESS_OWNER, description: 'Business', permissions: ['business:manage'] },
-    { name: UserRole.COURIER, description: 'Courier', permissions: ['delivery:manage'] },
+    {
+      name: UserRole.ADMIN,
+      description: 'Administrator',
+      permissions: [
+        'manage_users',
+        'manage_roles',
+        'manage_orders',
+        'manage_products',
+        'manage_dispatch',
+        'manage_businesses',
+        'manage_restaurants',
+        'manage_settings',
+      ],
+    },
+    {
+      name: UserRole.MANAGER,
+      description: 'Operations manager',
+      permissions: [
+        'manage_orders',
+        'manage_products',
+        'manage_dispatch',
+        'manage_businesses',
+        'manage_restaurants',
+      ],
+    },
+    {
+      name: UserRole.OPERATOR,
+      description: 'Support operator',
+      permissions: ['manage_orders', 'manage_dispatch'],
+    },
+    { name: UserRole.CUSTOMER, description: 'Customer', permissions: [] },
+    { name: UserRole.RESTAURANT_OWNER, description: 'Restaurant', permissions: ['manage_restaurants', 'manage_products'] },
+    { name: UserRole.BUSINESS_OWNER, description: 'Business', permissions: ['manage_businesses', 'manage_products'] },
+    { name: UserRole.COURIER, description: 'Courier', permissions: ['manage_dispatch'] },
   ];
   for (const role of roles) {
     await prisma.role.upsert({ where: { name: role.name }, update: {}, create: role });

@@ -1,4 +1,6 @@
 import { t } from '@/i18n';
+import { setAuthCookies, clearAuthCookies } from '@/lib/auth/cookies';
+import { useAuthStore } from '@/store/auth';
 
 export interface RegisterFormData {
   name: string;
@@ -53,11 +55,23 @@ export function normalizePhone(phone: string): string {
 }
 
 export function setAuthSession(accessToken: string, refreshToken?: string) {
+  if (typeof window === 'undefined') return;
   localStorage.setItem('accessToken', accessToken);
   if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+  if (refreshToken) setAuthCookies(accessToken, refreshToken);
 }
 
 export function clearAuthSession() {
+  if (typeof window === 'undefined') return;
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+  clearAuthCookies();
+  useAuthStore.setState({
+    accessToken: null,
+    refreshToken: null,
+    user: null,
+    role: null,
+    permissions: [],
+    isAuthenticated: false,
+  });
 }
