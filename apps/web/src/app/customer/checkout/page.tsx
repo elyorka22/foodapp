@@ -7,6 +7,7 @@ import { apiClient, formatUzs, getToken, type Address, type DeliveryQuote } from
 import { useCart } from '@/store/cart';
 import { MobileShell } from '@/components/MobileShell';
 import { customerPath } from '@/lib/paths';
+import { t } from '@/i18n';
 
 const DEFAULT_ADDRESS = {
   label: 'Uy',
@@ -68,7 +69,7 @@ export default function CheckoutPage() {
   async function placeOrder() {
     if (cart.items.length === 0) return;
     if (sub < cart.minOrderAmount) {
-      toast(`Minimal buyurtma ${formatUzs(cart.minOrderAmount)}`, 'error');
+      toast(t('checkout.minOrder', { amount: formatUzs(cart.minOrderAmount) }), 'error');
       return;
     }
     setLoading(true);
@@ -110,9 +111,9 @@ export default function CheckoutPage() {
       const res = await apiClient.validatePromo(promo, sub);
       setDiscount(res.discount);
       setFreeDelivery(!!res.freeDelivery);
-      toast('Promokod qo\'llandi', 'success');
+      toast(t('checkout.promoApplied'), 'success');
     } catch {
-      toast('Promokod noto\'g\'ri', 'error');
+      toast(t('checkout.promoInvalid'), 'error');
     }
   }
 
@@ -121,8 +122,8 @@ export default function CheckoutPage() {
       <MobileShell>
         <div className="p-8 text-center">
           <p className="text-5xl mb-4">🛒</p>
-          <p className="text-gray-500">Savat bo&apos;sh</p>
-          <Link href={customerPath('/')} className="text-brand-600 font-medium mt-4 inline-block">Bosh sahifa</Link>
+          <p className="text-gray-500">{t('checkout.empty')}</p>
+          <Link href={customerPath('/')} className="text-brand-600 font-medium mt-4 inline-block">{t('checkout.backHome')}</Link>
         </div>
       </MobileShell>
     );
@@ -131,12 +132,12 @@ export default function CheckoutPage() {
   return (
     <MobileShell>
       <div className="px-4 py-6 pb-32 max-w-lg mx-auto">
-        <Link href={customerPath('/cart')} className="text-brand-600 text-sm font-medium">← Savat</Link>
-        <h1 className="text-xl font-bold mt-4">Buyurtma</h1>
+        <Link href={customerPath('/cart')} className="text-brand-600 text-sm font-medium">← {t('checkout.backCart')}</Link>
+        <h1 className="text-xl font-bold mt-4">{t('checkout.title')}</h1>
         <p className="text-sm text-gray-500">{cart.vendorName}</p>
 
         <section className="mt-6">
-          <h2 className="font-semibold text-sm mb-2">Yetkazish manzili</h2>
+          <h2 className="font-semibold text-sm mb-2">{t('checkout.address')}</h2>
           <div className="space-y-2">
             {(addresses.length ? addresses : [{ id: 'default', ...DEFAULT_ADDRESS, isDefault: true } as Address]).map((a) => (
               <button
@@ -157,27 +158,27 @@ export default function CheckoutPage() {
         </section>
 
         <section className="mt-4">
-          <Input label="Telefon" value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="+998901234567" />
+          <Input label={t('checkout.phone')} value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)} placeholder="+998901234567" />
         </section>
 
         <section className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Izoh (ixtiyoriy)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('checkout.notes')}</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm"
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:ring-2 focus:ring-brand-100 focus:border-brand-500 outline-none"
             rows={2}
-            placeholder="Domofon, eshik oldi..."
+            placeholder={t('checkout.notesPlaceholder')}
           />
         </section>
 
         <section className="mt-4 flex gap-2">
-          <Input placeholder="Promokod (SALOM20)" value={promo} onChange={(e) => setPromo(e.target.value)} />
-          <Button variant="secondary" onClick={applyPromo}>Qo'llash</Button>
+          <Input placeholder={t('cart.promoPlaceholder')} value={promo} onChange={(e) => setPromo(e.target.value)} />
+          <Button variant="secondary" onClick={applyPromo}>{t('common.apply')}</Button>
         </section>
 
         <section className="mt-4">
-          <p className="text-sm font-semibold mb-2">To&apos;lov</p>
+          <p className="text-sm font-semibold mb-2">{t('checkout.payment')}</p>
           <div className="flex gap-2">
             {(['CASH', 'CLICK', 'PAYME'] as const).map((m) => (
               <button
@@ -195,14 +196,14 @@ export default function CheckoutPage() {
         </section>
 
         <div className="mt-6 space-y-2 text-sm bg-gray-50 rounded-2xl p-4">
-          <div className="flex justify-between"><span>Jami mahsulot</span><span>{formatUzs(sub)}</span></div>
-          <div className="flex justify-between"><span>Yetkazish {quote ? `(${quote.distanceKm} km)` : ''}</span><span>{formatUzs(deliveryFee)}</span></div>
-          {discount > 0 && <div className="flex justify-between text-brand-600"><span>Chegirma</span><span>-{formatUzs(discount)}</span></div>}
-          <div className="flex justify-between font-bold text-base pt-2 border-t"><span>To&apos;lov</span><span>{formatUzs(total)}</span></div>
+          <div className="flex justify-between"><span>{t('checkout.productsTotal')}</span><span>{formatUzs(sub)}</span></div>
+          <div className="flex justify-between"><span>{t('cart.delivery')} {quote ? `(${quote.distanceKm} km)` : ''}</span><span>{formatUzs(deliveryFee)}</span></div>
+          {discount > 0 && <div className="flex justify-between text-brand-600"><span>{t('cart.discount')}</span><span>-{formatUzs(discount)}</span></div>}
+          <div className="flex justify-between font-bold text-base pt-2 border-t"><span>{t('cart.total')}</span><span>{formatUzs(total)}</span></div>
         </div>
 
         <Button fullWidth className="mt-6" onClick={placeOrder} disabled={loading}>
-          {loading ? 'Buyurtma berilmoqda...' : 'Buyurtmani tasdiqlash'}
+          {loading ? t('checkout.confirming') : t('checkout.confirm')}
         </Button>
       </div>
     </MobileShell>

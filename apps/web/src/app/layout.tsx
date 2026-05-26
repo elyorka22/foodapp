@@ -5,8 +5,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin', 'cyrillic'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'FoodMarket',
-  description: 'FoodMarket — delivery platform',
+  title: 'FoodMarket — Ovqat va mahsulot yetkazib berish',
+  description: 'FoodMarket — Toshkent va butun O\'zbekiston bo\'ylab tez yetkazib berish',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

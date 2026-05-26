@@ -2,20 +2,22 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Button, Input } from '@foodmarket/ui';
+import { Button, Input, useToast } from '@foodmarket/ui';
 import { useCart } from '@/store/cart';
-import { apiClient } from '@/lib/api';
+import { apiClient, formatUzs } from '@/lib/api';
 import { MobileShell } from '@/components/MobileShell';
 import { customerPath } from '@/lib/paths';
+import { t } from '@/i18n';
 
 export default function CartPage() {
   const { items, vendorName, vendorId, vendorType, subtotal, updateQty, removeItem, clear } = useCart();
   const [promo, setPromo] = useState('');
   const [discount, setDiscount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const sub = subtotal();
-  const deliveryFee = 2.99;
+  const deliveryFee = 15000;
   const total = sub + deliveryFee - discount;
 
   async function applyPromo() {
@@ -23,7 +25,7 @@ export default function CartPage() {
       const res = await apiClient.validatePromo(promo, sub);
       setDiscount(res.discount);
     } catch {
-      alert('Invalid promo code');
+      toast(t('cart.invalidPromo'), 'error');
     }
   }
 
@@ -37,7 +39,7 @@ export default function CartPage() {
           deliveryAddressId: 'seed-address-id',
           items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
           guestEmail: 'guest@example.com',
-          guestName: 'Guest',
+          guestName: 'Mehmon',
           promoCode: promo || undefined,
         },
         accessToken,
@@ -45,7 +47,7 @@ export default function CartPage() {
       clear();
       window.location.href = customerPath(`/orders/${order.id}`);
     } catch (e) {
-      alert((e as Error).message || 'Checkout failed — ensure API is running');
+      toast((e as Error).message || t('common.error'), 'error');
     } finally {
       setLoading(false);
     }
@@ -54,9 +56,12 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <MobileShell>
-        <div className="p-8 text-center">
-          <p className="text-gray-500">Your cart is empty</p>
-          <Link href={customerPath('/')} className="text-brand-600 font-medium mt-2 inline-block">Browse stores</Link>
+        <div className="p-10 text-center max-w-lg mx-auto">
+          <p className="text-5xl mb-4">🛒</p>
+          <p className="text-gray-600 font-medium">{t('cart.empty')}</p>
+          <Link href={customerPath('/')} className="text-brand-600 font-semibold mt-4 inline-block">
+            {t('cart.browse')}
+          </Link>
         </div>
       </MobileShell>
     );
@@ -65,43 +70,72 @@ export default function CartPage() {
   return (
     <MobileShell>
       <div className="px-4 py-6 pb-32 max-w-lg mx-auto">
-        <h1 className="text-xl font-bold">Your cart</h1>
-        <p className="text-sm text-gray-500">{vendorName}</p>
+        <h1 className="text-xl font-bold">{t('cart.title')}</h1>
+        <p className="text-sm text-gray-500 mt-1">{vendorName}</p>
 
         <div className="mt-6 space-y-3">
           {items.map((item) => (
-            <div key={item.productId} className="flex justify-between items-center bg-white rounded-xl p-3 border">
-              <div>
-                <p className="font-medium">{item.name}</p>
-                <p className="text-sm text-brand-700">${item.price.toFixed(2)}</p>
+            <div key={item.productId} className="flex justify-between items-center bg-white rounded-2xl p-4 border border-gray-100 shadow-card">
+              <div className="flex-1 min-w-0 pr-3">
+                <p className="font-semibold text-gray-900 truncate">{item.name}</p>
+                <p className="text-sm text-brand-700 font-bold mt-0.5">{formatUzs(item.price)}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => updateQty(item.productId, Math.max(1, item.quantity - 1))} className="w-8 h-8 rounded-lg bg-gray-100">−</button>
-                <span>{item.quantity}</span>
-                <button onClick={() => updateQty(item.productId, item.quantity + 1)} className="w-8 h-8 rounded-lg bg-gray-100">+</button>
-                <button onClick={() => removeItem(item.productId)} className="text-red-500 text-sm ml-2">Remove</button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => updateQty(item.productId, Math.max(1, item.quantity - 1))}
+                  className="w-9 h-9 rounded-xl bg-gray-100 font-bold text-gray-700 touch-auto min-h-0 min-w-0"
+                >
+                  −
+                </button>
+                <span className="w-6 text-center font-semibold">{item.quantity}</span>
+                <button
+                  type="button"
+                  onClick={() => updateQty(item.productId, item.quantity + 1)}
+                  className="w-9 h-9 rounded-xl bg-gray-100 font-bold text-gray-700 touch-auto min-h-0 min-w-0"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeItem(item.productId)}
+                  className="text-red-500 text-xs font-semibold ml-1 touch-auto min-h-0 min-w-0"
+                >
+                  {t('common.remove')}
+                </button>
               </div>
             </div>
           ))}
         </div>
 
         <div className="mt-6 flex gap-2">
-          <Input placeholder="Promo code" value={promo} onChange={(e) => setPromo(e.target.value)} />
-          <Button variant="secondary" onClick={applyPromo}>Apply</Button>
+          <Input placeholder={t('cart.promoPlaceholder')} value={promo} onChange={(e) => setPromo(e.target.value)} />
+          <Button variant="secondary" onClick={applyPromo} className="shrink-0 touch-auto min-h-0">
+            {t('common.apply')}
+          </Button>
         </div>
 
-        <div className="mt-6 space-y-2 text-sm">
-          <div className="flex justify-between"><span>Subtotal</span><span>${sub.toFixed(2)}</span></div>
-          <div className="flex justify-between"><span>Delivery</span><span>${deliveryFee.toFixed(2)}</span></div>
-          {discount > 0 && <div className="flex justify-between text-brand-600"><span>Discount</span><span>-${discount.toFixed(2)}</span></div>}
-          <div className="flex justify-between font-bold text-lg pt-2 border-t"><span>Total</span><span>${total.toFixed(2)}</span></div>
+        <div className="mt-6 space-y-2 text-sm bg-white rounded-2xl p-4 border border-gray-100">
+          <div className="flex justify-between"><span>{t('cart.subtotal')}</span><span>{formatUzs(sub)}</span></div>
+          <div className="flex justify-between"><span>{t('cart.delivery')}</span><span>{formatUzs(deliveryFee)}</span></div>
+          {discount > 0 && (
+            <div className="flex justify-between text-brand-600">
+              <span>{t('cart.discount')}</span><span>-{formatUzs(discount)}</span>
+            </div>
+          )}
+          <div className="flex justify-between font-bold text-base pt-2 border-t border-gray-100">
+            <span>{t('cart.total')}</span><span>{formatUzs(total)}</span>
+          </div>
         </div>
 
-        <Button fullWidth className="mt-6" onClick={checkout} disabled={loading}>
-          {loading ? 'Placing order...' : 'Checkout as guest'}
+        <Button fullWidth className="mt-6" size="lg" onClick={checkout} disabled={loading}>
+          {loading ? t('cart.placing') : t('cart.checkoutGuest')}
         </Button>
-        <p className="text-xs text-center text-gray-400 mt-3">
-          <Link href={customerPath('/account')} className="text-brand-600">Sign in</Link> for faster checkout
+        <p className="text-xs text-center text-gray-400 mt-4">
+          <Link href={customerPath('/account')} className="text-brand-600 font-semibold">
+            {t('auth.signIn')}
+          </Link>{' '}
+          {t('cart.signInFaster')}
         </p>
       </div>
     </MobileShell>

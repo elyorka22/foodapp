@@ -139,6 +139,21 @@ export interface DeliveryQuote {
   minOrderAmount: number;
 }
 
+export interface AuthUser {
+  id: string;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  isGuest?: boolean;
+  role: { name: string };
+}
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
+}
+
 export interface OrderDetail {
   id: string;
   orderNumber: string;
@@ -168,9 +183,20 @@ export const apiClient = {
     ),
   guestAuth: () => api<{ accessToken: string }>('/auth/guest', { method: 'POST' }),
   login: (email: string, password: string) =>
-    api<{ accessToken: string; user: { id: string } }>('/auth/login', {
+    api<AuthTokens>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
+    }),
+  register: (body: {
+    email: string;
+    password: string;
+    phone: string;
+    firstName: string;
+    lastName?: string;
+  }) =>
+    api<AuthTokens>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ ...body, role: 'CUSTOMER' }),
     }),
   createAddress: (body: Partial<Address>, token?: string) =>
     api<Address>('/addresses', { method: 'POST', body: JSON.stringify(body), token }),

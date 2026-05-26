@@ -7,6 +7,8 @@ export interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
+  /** Only highlight when pathname matches exactly (for home tab) */
+  exact?: boolean;
 }
 
 export function BottomNav({ items }: { items: NavItem[] }) {
@@ -15,7 +17,9 @@ export function BottomNav({ items }: { items: NavItem[] }) {
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-100 safe-bottom md:hidden">
       <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
         {items.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + '/');
+          const active = item.exact
+            ? pathname === item.href || pathname === `${item.href}/`
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.href}

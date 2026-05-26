@@ -17,9 +17,14 @@ const config: Config = {
           700: '#15803d',
           800: '#166534',
         },
+        surface: {
+          DEFAULT: '#f8fafc',
+          muted: '#f1f5f9',
+        },
       },
       boxShadow: {
-        card: '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
+        card: '0 2px 8px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
+        soft: '0 4px 14px 0 rgb(0 0 0 / 0.08)',
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],

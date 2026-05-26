@@ -9,6 +9,7 @@ import { apiClient, formatUzs, type RestaurantDetail, type Product } from '@/lib
 import { useCart } from '@/store/cart';
 import { MobileShell } from '@/components/MobileShell';
 import { customerPath } from '@/lib/paths';
+import { t } from '@/i18n';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -45,8 +46,10 @@ export default function RestaurantPage() {
     return (
       <MobileShell>
         <div className="p-8 text-center">
-          <p className="text-gray-500">{error ?? 'Restoran topilmadi'}</p>
-          <Link href={customerPath('/')} className="text-brand-600 mt-4 inline-block">Bosh sahifa</Link>
+          <p className="text-gray-500">{error ?? t('restaurant.notFound')}</p>
+          <Link href={customerPath('/')} className="text-brand-600 mt-4 inline-block font-semibold">
+            {t('restaurant.backHome')}
+          </Link>
         </div>
       </MobileShell>
     );
@@ -63,7 +66,7 @@ export default function RestaurantPage() {
         </Link>
         {closed && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="text-white font-bold">Hozir yopiq</span>
+            <span className="text-white font-bold">{t('restaurant.closed')}</span>
           </div>
         )}
       </div>
@@ -73,15 +76,15 @@ export default function RestaurantPage() {
           <p className="text-sm text-gray-500 mt-1">{data.description}</p>
           <div className="flex flex-wrap gap-2 mt-2">
             <Badge variant="success">★ {data.rating}</Badge>
-            <Badge>{data.avgPrepMinutes} daq</Badge>
-            <Badge>Min {formatUzs(data.minOrderAmount)}</Badge>
+            <Badge>{t('restaurant.deliveryTime', { min: data.avgPrepMinutes })}</Badge>
+            <Badge>{t('restaurant.minOrder', { amount: formatUzs(data.minOrderAmount) })}</Badge>
           </div>
         </div>
 
         <section className="mt-6">
-          <h2 className="font-bold text-lg mb-3">Menyu</h2>
+          <h2 className="font-bold text-lg mb-3">{t('restaurant.menu')}</h2>
           {products.length === 0 ? (
-            <p className="text-gray-500 text-sm">Mahsulotlar yo&apos;q</p>
+            <p className="text-gray-500 text-sm">{t('restaurant.noProducts')}</p>
           ) : (
             <div className="space-y-3">
               {products.map((p) => (
@@ -130,7 +133,7 @@ export default function RestaurantPage() {
                 minOrderAmount: data.minOrderAmount,
               },
             );
-            toast('Savatga qo\'shildi', 'success');
+            toast(t('restaurant.addedToCart'), 'success');
           }}
         />
       )}
