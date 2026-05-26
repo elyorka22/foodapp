@@ -29,8 +29,11 @@ Open firewall: `4000` (API), optionally restrict Postgres/Redis to private netwo
 NEXT_PUBLIC_API_URL=https://api.foodmarket.uz/api/v1
 NEXT_PUBLIC_WS_URL=wss://api.foodmarket.uz
 
-docker compose -f docker-compose.frontend.yml up -d --build
+docker compose -f docker-compose.frontend.yml build --no-cache web
+docker compose -f docker-compose.frontend.yml up -d
 ```
+
+The web container runs the Next.js **standalone** server (`node apps/web/server.js`), not `next start`.
 
 Frontend build on the VPS (if building outside Docker):
 

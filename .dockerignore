@@ -1,18 +1,27 @@
+# Dependencies & build output (rebuilt inside the image)
 node_modules
 **/node_modules
 **/.next
 **/dist
+.turbo
+
+# Git & IDE
 .git
 .github
+.cursor
 *.md
 docs
+
+# Secrets (inject via env_file at runtime)
 .env
 .env.*
 !.env.example
+
+# Backend / workers — not needed for @foodmarket/web image
 apps/api
 workers
-packages/database/prisma/migrations
+packages/database
+
+# Misc
 **/*.log
-**/.turbo
 coverage
-.cursor

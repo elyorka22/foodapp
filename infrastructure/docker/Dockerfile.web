@@ -1,20 +1,27 @@
-# Single FoodMarket frontend (@foodmarket/web) — tuned for 2GB RAM VPS
+# Production image for @foodmarket/web (Next.js 15 + npm workspaces + standalone)
 FROM node:20-alpine AS base
 WORKDIR /app
+RUN apk add --no-cache libc6-compat
 
+# Install only workspaces required for the web build (smaller layer, less RAM)
 FROM base AS deps
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/shared-types/package.json ./packages/shared-types/
-RUN npm ci --workspace=@foodmarket/web --workspace=@foodmarket/ui --workspace=@foodmarket/shared-types --include-workspace-root 2>/dev/null \
-  || npm install --workspace=@foodmarket/web --workspace=@foodmarket/ui --workspace=@foodmarket/shared-types --include-workspace-root
+RUN npm ci \
+  --workspace=@foodmarket/web \
+  --workspace=@foodmarket/ui \
+  --workspace=@foodmarket/shared-types \
+  --include-workspace-root
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY package.json package-lock.json ./
+COPY apps/web ./apps/web
+COPY packages/ui ./packages/ui
+COPY packages/shared-types ./packages/shared-types
 ENV NEXT_TELEMETRY_DISABLED=1
-# Limit Node heap during `next build` on small VPS
 ENV NODE_OPTIONS=--max-old-space-size=1536
 RUN npm run build -w @foodmarket/web
 
@@ -23,12 +30,18 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 ENV NODE_OPTIONS=--max-old-space-size=512
-RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
-COPY --from=builder /app/apps/web/public ./public
+
+RUN addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 nextjs
+
+# Monorepo standalone output keeps the app at apps/web/server.js (not /app/server.js)
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
+
+# Standalone trace does not bundle static assets — must copy beside server.js
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+
 USER nextjs
 EXPOSE 3000
-ENV HOSTNAME=0.0.0.0
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]
