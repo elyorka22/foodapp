@@ -4,8 +4,7 @@
   "private": true,
   "description": "Multi-vendor food delivery and grocery marketplace",
   "workspaces": [
-    "apps/api",
-    "apps/web",
+    "apps/*",
     "packages/*",
     "workers"
   ],
