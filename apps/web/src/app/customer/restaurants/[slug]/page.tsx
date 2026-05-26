@@ -8,6 +8,7 @@ import type { ProductModalProduct } from '@foodmarket/ui';
 import { apiClient, formatUzs, type RestaurantDetail, type Product } from '@/lib/api';
 import { useCart } from '@/store/cart';
 import { MobileShell } from '@/components/MobileShell';
+import { customerPath } from '@/lib/paths';
 
 export default function RestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -45,7 +46,7 @@ export default function RestaurantPage() {
       <MobileShell>
         <div className="p-8 text-center">
           <p className="text-gray-500">{error ?? 'Restoran topilmadi'}</p>
-          <Link href="/" className="text-brand-600 mt-4 inline-block">Bosh sahifa</Link>
+          <Link href={customerPath('/')} className="text-brand-600 mt-4 inline-block">Bosh sahifa</Link>
         </div>
       </MobileShell>
     );
@@ -57,7 +58,7 @@ export default function RestaurantPage() {
   return (
     <MobileShell cartBump={bump}>
       <div className="relative aspect-[2/1] bg-gradient-to-br from-brand-100 to-brand-50">
-        <Link href="/" className="absolute top-4 left-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow text-lg">
+        <Link href={customerPath('/')} className="absolute top-4 left-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow text-lg">
           ←
         </Link>
         {closed && (

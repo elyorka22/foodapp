@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button, ProductRowSkeleton, useToast } from '@foodmarket/ui';
 import { apiClient, formatUzs, getToken, type OrderDetail } from '@/lib/api';
 import { MobileShell } from '@/components/MobileShell';
+import { customerPath } from '@/lib/paths';
 
 const STATUS_UZ: Record<string, string> = {
   PENDING: 'Kutilmoqda',
@@ -41,7 +42,7 @@ export default function OrdersPage() {
       const token = getToken() ?? (await apiClient.guestAuth()).accessToken;
       const order = await apiClient.reorder(id, token);
       toast('Savatga qo\'shildi — checkoutga o\'ting', 'success');
-      window.location.href = `/checkout`;
+      window.location.href = customerPath('/checkout');
     } catch (e) {
       toast((e as Error).message, 'error');
     }
@@ -53,7 +54,7 @@ export default function OrdersPage() {
         <h1 className="text-xl font-bold">Buyurtmalarim</h1>
         {!getToken() && (
           <p className="text-sm text-gray-500 mt-2">
-            <Link href="/account" className="text-brand-600">Kiring</Link> — tarixni ko&apos;rish uchun
+            <Link href={customerPath('/account')} className="text-brand-600">Kiring</Link> — tarixni ko&apos;rish uchun
           </p>
         )}
         {loading && (
@@ -67,7 +68,7 @@ export default function OrdersPage() {
           <div className="mt-12 text-center text-gray-500">
             <p className="text-4xl mb-3">📦</p>
             <p>Hali buyurtmalar yo&apos;q</p>
-            <Link href="/" className="text-brand-600 font-medium mt-4 inline-block">Buyurtma berish</Link>
+            <Link href={customerPath('/')} className="text-brand-600 font-medium mt-4 inline-block">Buyurtma berish</Link>
           </div>
         )}
         <div className="mt-6 space-y-3">
@@ -84,7 +85,7 @@ export default function OrdersPage() {
                 <p className="font-bold">{formatUzs(o.total)}</p>
               </div>
               <div className="flex gap-2 mt-3">
-                <Link href={`/orders/${o.id}`} className="flex-1">
+                <Link href={customerPath(`/orders/${o.id}`)} className="flex-1">
                   <Button fullWidth size="sm" variant="secondary">Kuzatish</Button>
                 </Link>
                 {o.status === 'DELIVERED' && (

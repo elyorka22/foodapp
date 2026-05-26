@@ -6,6 +6,7 @@ import { Button, Input, useToast } from '@foodmarket/ui';
 import { apiClient, formatUzs, getToken, type Address, type DeliveryQuote } from '@/lib/api';
 import { useCart } from '@/store/cart';
 import { MobileShell } from '@/components/MobileShell';
+import { customerPath } from '@/lib/paths';
 
 const DEFAULT_ADDRESS = {
   label: 'Uy',
@@ -96,7 +97,7 @@ export default function CheckoutPage() {
         token,
       );
       cart.clear();
-      window.location.href = `/order/success?id=${order.id}&number=${order.orderNumber}`;
+      window.location.href = `${customerPath('/order/success')}?id=${order.id}&number=${order.orderNumber}`;
     } catch (e) {
       toast((e as Error).message, 'error');
     } finally {
@@ -121,7 +122,7 @@ export default function CheckoutPage() {
         <div className="p-8 text-center">
           <p className="text-5xl mb-4">🛒</p>
           <p className="text-gray-500">Savat bo&apos;sh</p>
-          <Link href="/" className="text-brand-600 font-medium mt-4 inline-block">Bosh sahifa</Link>
+          <Link href={customerPath('/')} className="text-brand-600 font-medium mt-4 inline-block">Bosh sahifa</Link>
         </div>
       </MobileShell>
     );
@@ -130,7 +131,7 @@ export default function CheckoutPage() {
   return (
     <MobileShell>
       <div className="px-4 py-6 pb-32 max-w-lg mx-auto">
-        <Link href="/cart" className="text-brand-600 text-sm font-medium">← Savat</Link>
+        <Link href={customerPath('/cart')} className="text-brand-600 text-sm font-medium">← Savat</Link>
         <h1 className="text-xl font-bold mt-4">Buyurtma</h1>
         <p className="text-sm text-gray-500">{cart.vendorName}</p>
 

@@ -36,11 +36,11 @@ FoodMarket is a **multi-vendor food delivery and grocery marketplace** built as 
 
 | App | Port | Role | Users |
 |-----|------|------|-------|
-| `apps/customer` | 3000 | Browse, cart, guest checkout, tracking | Customers, guests |
-| `apps/admin` | 3001 | Platform analytics, vendors, promos | ADMIN |
-| `apps/restaurant` | 3002 | Menu, orders, hours | RESTAURANT_OWNER |
-| `apps/business` | 3003 | Products, inventory, grocery orders | BUSINESS_OWNER |
-| `apps/courier` | 3004 | Live GPS, delivery steps | COURIER |
+| `apps/web` (`/customer`) | 3000 | Browse, cart, guest checkout, tracking | Customers, guests |
+| `apps/web` (`/admin`) | 3000 | Platform analytics, vendors, promos | ADMIN |
+| `apps/web` (`/restaurant`) | 3000 | Menu, orders, hours | RESTAURANT_OWNER |
+| `apps/web` (`/business`) | 3000 | Products, inventory, grocery orders | BUSINESS_OWNER |
+| `apps/web` (`/courier`) | 3000 | Live GPS, delivery steps | COURIER |
 
 ## Backend Modules (Microservice-Ready)
 

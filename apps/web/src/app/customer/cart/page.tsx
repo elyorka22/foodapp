@@ -6,6 +6,7 @@ import { Button, Input } from '@foodmarket/ui';
 import { useCart } from '@/store/cart';
 import { apiClient } from '@/lib/api';
 import { MobileShell } from '@/components/MobileShell';
+import { customerPath } from '@/lib/paths';
 
 export default function CartPage() {
   const { items, vendorName, vendorId, vendorType, subtotal, updateQty, removeItem, clear } = useCart();
@@ -42,7 +43,7 @@ export default function CartPage() {
         accessToken,
       ) as { id: string };
       clear();
-      window.location.href = `/orders/${order.id}`;
+      window.location.href = customerPath(`/orders/${order.id}`);
     } catch (e) {
       alert((e as Error).message || 'Checkout failed — ensure API is running');
     } finally {
@@ -55,7 +56,7 @@ export default function CartPage() {
       <MobileShell>
         <div className="p-8 text-center">
           <p className="text-gray-500">Your cart is empty</p>
-          <Link href="/" className="text-brand-600 font-medium mt-2 inline-block">Browse stores</Link>
+          <Link href={customerPath('/')} className="text-brand-600 font-medium mt-2 inline-block">Browse stores</Link>
         </div>
       </MobileShell>
     );
@@ -100,7 +101,7 @@ export default function CartPage() {
           {loading ? 'Placing order...' : 'Checkout as guest'}
         </Button>
         <p className="text-xs text-center text-gray-400 mt-3">
-          <Link href="/account" className="text-brand-600">Sign in</Link> for faster checkout
+          <Link href={customerPath('/account')} className="text-brand-600">Sign in</Link> for faster checkout
         </p>
       </div>
     </MobileShell>

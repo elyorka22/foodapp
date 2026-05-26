@@ -71,10 +71,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: infrastructure/docker/Dockerfile.next
-      args:
-        APP_NAME: web
-        APP_PORT: 3000
+      dockerfile: infrastructure/docker/Dockerfile.web
     container_name: foodmarket-web
     restart: always
     env_file: .env

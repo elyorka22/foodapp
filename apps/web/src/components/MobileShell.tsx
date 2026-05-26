@@ -2,14 +2,15 @@
 
 import { BottomNav, StickyCartBar } from '@foodmarket/ui';
 import { formatUzs } from '@/lib/api';
+import { customerPath } from '@/lib/paths';
 import { useCart } from '@/store/cart';
 
 const navItems = [
-  { href: '/', label: 'Home', icon: <HomeIcon /> },
-  { href: '/restaurants', label: 'Food', icon: <FoodIcon /> },
-  { href: '/shops', label: 'Shops', icon: <ShopIcon /> },
-  { href: '/orders', label: 'Orders', icon: <OrdersIcon /> },
-  { href: '/account', label: 'Account', icon: <AccountIcon /> },
+  { href: customerPath('/'), label: 'Home', icon: <HomeIcon /> },
+  { href: customerPath('/restaurants'), label: 'Food', icon: <FoodIcon /> },
+  { href: customerPath('/shops'), label: 'Shops', icon: <ShopIcon /> },
+  { href: customerPath('/orders'), label: 'Orders', icon: <OrdersIcon /> },
+  { href: customerPath('/account'), label: 'Account', icon: <AccountIcon /> },
 ];
 
 export function MobileShell({ children, cartBump = 0 }: { children: React.ReactNode; cartBump?: number }) {
@@ -19,7 +20,12 @@ export function MobileShell({ children, cartBump = 0 }: { children: React.ReactN
     <>
       {children}
       <div key={cartBump} className={cartBump ? 'animate-cart-bump' : ''}>
-        <StickyCartBar itemCount={itemCount} total={subtotal} totalLabel={formatUzs(subtotal)} href="/checkout" />
+        <StickyCartBar
+          itemCount={itemCount}
+          total={subtotal}
+          totalLabel={formatUzs(subtotal)}
+          href={customerPath('/checkout')}
+        />
       </div>
       <BottomNav items={navItems} />
     </>

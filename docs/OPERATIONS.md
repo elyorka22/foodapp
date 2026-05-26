@@ -119,7 +119,7 @@ Watch during rush: reconnect spike, queue waiting > 50, Redis down, slow queries
 
 ```bash
 # From repo root (socket.io-client via courier workspace)
-cd apps/courier && node ../../scripts/stress/pre-launch-stress.mjs ws-flood
+node scripts/stress/pre-launch-stress.mjs ws-flood
 ADMIN_TOKEN=<jwt> node ../../scripts/stress/pre-launch-stress.mjs reconnect-storm
 ```
 

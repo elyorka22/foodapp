@@ -21,11 +21,18 @@ Single Next.js app — all panels on one origin (lower VPS cost):
 
 | Path | Role |
 |------|------|
-| `/` | Customer — browse, cart, checkout, tracking |
+| `/` | Redirects to `/customer` |
+| `/customer` | Storefront — browse, cart, checkout, tracking |
 | `/admin` | Platform ops, analytics, incidents |
-| `/restaurant` | Menu & orders |
-| `/business` | Grocery / shops |
-| `/courier` | GPS & deliveries |
+| `/restaurant` | Restaurant panel — menu & orders |
+| `/business` | Business panel — grocery / shops |
+| `/courier` | Courier — GPS & deliveries |
+
+Production frontend build (only one Next.js app):
+
+```bash
+npm run build -w @foodmarket/web
+```
 
 See [docs/MIGRATION-FRONTEND.md](docs/MIGRATION-FRONTEND.md).
 
@@ -49,6 +56,7 @@ npm run dev:web
 | Service | URL |
 |---------|-----|
 | Web (all panels) | http://localhost:3000 |
+| Customer | http://localhost:3000/customer |
 | Admin | http://localhost:3000/admin |
 | Restaurant panel | http://localhost:3000/restaurant |
 | Business | http://localhost:3000/business |
@@ -74,7 +82,7 @@ Promo code: `SALOM20` · Currency: UZS · Timezone: Asia/Tashkent
 # Backend droplet (API, Postgres, Redis, workers)
 docker compose -f docker-compose.backend.yml up -d --build
 
-# Frontend droplet (5 Next apps + Nginx)
+# Frontend droplet (single Next.js app + Nginx)
 # Set NEXT_PUBLIC_API_URL to backend public URL
 docker compose -f docker-compose.frontend.yml up -d --build
 ```

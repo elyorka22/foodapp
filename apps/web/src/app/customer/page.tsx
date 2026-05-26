@@ -4,6 +4,7 @@ import { apiClient } from '@/lib/api';
 import { HomeHeader } from '@/components/HomeHeader';
 import { CategoryPills } from '@/components/CategoryPills';
 import { MobileShell } from '@/components/MobileShell';
+import { customerPath } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,14 +35,14 @@ export default async function HomePage() {
         <section className="mt-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">Popular restaurants</h2>
-            <Link href="/restaurants" className="text-sm font-medium text-brand-600">See all</Link>
+            <Link href={customerPath('/restaurants')} className="text-sm font-medium text-brand-600">See all</Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {restaurants.length > 0 ? (
               restaurants.map((r) => (
                 <VendorCard
                   key={r.id}
-                  href={`/restaurants/${r.slug}`}
+                  href={customerPath(`/restaurants/${r.slug}`)}
                   name={r.name}
                   imageUrl={r.coverImageUrl}
                   rating={r.rating}
@@ -59,14 +60,14 @@ export default async function HomePage() {
         <section className="mt-10">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">Shops & grocery</h2>
-            <Link href="/shops" className="text-sm font-medium text-brand-600">See all</Link>
+            <Link href={customerPath('/shops')} className="text-sm font-medium text-brand-600">See all</Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {businesses.length > 0 ? (
               businesses.map((b) => (
                 <VendorCard
                   key={b.id}
-                  href={`/shop/${b.slug}`}
+                  href={customerPath(`/shop/${b.slug}`)}
                   name={b.name}
                   imageUrl={b.coverImageUrl}
                   rating={b.rating}

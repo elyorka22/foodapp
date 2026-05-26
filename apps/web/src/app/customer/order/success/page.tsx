@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@foodmarket/ui';
+import { customerPath } from '@/lib/paths';
 
 function SuccessContent() {
   const params = useSearchParams();
@@ -22,14 +23,16 @@ function SuccessContent() {
       </p>
       <div className="flex flex-col gap-3 w-full max-w-xs mt-8">
         {id && (
-          <Link href={`/orders/${id}`}>
+          <Link href={customerPath(`/orders/${id}`)}>
             <Button fullWidth>Buyurtmani kuzatish</Button>
           </Link>
         )}
-        <Link href="/orders">
+        <Link href={customerPath('/orders')}>
           <Button fullWidth variant="secondary">Buyurtmalarim</Button>
         </Link>
-        <Link href="/" className="text-sm text-gray-500 mt-2">Bosh sahifa</Link>
+        <Link href={customerPath('/')} className="text-sm text-gray-500 mt-2">
+          Bosh sahifa
+        </Link>
       </div>
     </div>
   );

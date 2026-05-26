@@ -7,6 +7,7 @@ import { Button } from '@foodmarket/ui';
 import { apiClient, type BusinessDetail } from '@/lib/api';
 import { useCart } from '@/store/cart';
 import { MobileShell } from '@/components/MobileShell';
+import { customerPath } from '@/lib/paths';
 
 export default function ShopPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -30,7 +31,7 @@ export default function ShopPage() {
   return (
     <MobileShell>
       <div className="px-4 py-6 pb-28">
-        <Link href="/shops" className="text-brand-600 text-sm">← Shops</Link>
+        <Link href={customerPath('/shops')} className="text-brand-600 text-sm">← Shops</Link>
         <h1 className="text-xl font-bold mt-4">{data.name}</h1>
         <p className="text-sm text-gray-500">{data.type.replace('_', ' ')} · ★ {data.rating}</p>
         <div className="mt-6 space-y-3">

@@ -8,6 +8,7 @@ import { OrderTracker } from '@foodmarket/ui';
 import type { OrderStatus } from '@foodmarket/shared-types';
 import { apiClient, type OrderDetail } from '@/lib/api';
 import { MobileShell } from '@/components/MobileShell';
+import { customerPath } from '@/lib/paths';
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:4000';
 
@@ -44,7 +45,7 @@ export default function OrderTrackingPage() {
   return (
     <MobileShell>
       <div className="px-4 py-6 pb-28 max-w-lg mx-auto">
-        <Link href="/orders" className="text-brand-600 text-sm font-medium">← Orders</Link>
+        <Link href={customerPath('/orders')} className="text-brand-600 text-sm font-medium">← Orders</Link>
         <h1 className="text-xl font-bold mt-4">Order {order.orderNumber}</h1>
         <p className="text-gray-500 text-sm mt-1">
           {order.distanceKm != null && `${order.distanceKm} km · `}

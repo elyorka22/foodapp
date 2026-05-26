@@ -4,7 +4,8 @@
   "private": true,
   "description": "Multi-vendor food delivery and grocery marketplace",
   "workspaces": [
-    "apps/*",
+    "apps/api",
+    "apps/web",
     "packages/*",
     "workers"
   ],
@@ -12,7 +13,8 @@
     "dev": "turbo run dev",
     "dev:api": "npm run dev -w @foodmarket/api",
     "dev:web": "npm run dev -w @foodmarket/web",
-    "build": "turbo run build",
+    "build": "turbo run build --filter=@foodmarket/api --filter=@foodmarket/database --filter=@foodmarket/web --filter=foodmarket-workers",
+    "build:web": "npm run build -w @foodmarket/web",
     "lint": "turbo run lint",
     "db:generate": "npm run generate -w @foodmarket/database",
     "db:migrate": "npm run migrate:dev -w @foodmarket/database",

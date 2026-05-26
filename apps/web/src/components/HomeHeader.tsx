@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { customerPath } from '@/lib/paths';
 
 export function HomeHeader() {
   return (
@@ -17,7 +18,7 @@ export function HomeHeader() {
             </button>
           </div>
           <Link
-            href="/account"
+            href={customerPath('/account')}
             className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-700 font-bold"
           >
             FM

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { CUSTOMER } from '@/lib/paths';
 
-/** Map legacy subdomains to path prefixes on one Next.js app. */
+/** Subdomain → panel path prefix (single Next.js app). */
 const SUBDOMAIN_PREFIX: Record<string, string> = {
+  www: CUSTOMER,
   admin: '/admin',
   courier: '/courier',
   business: '/business',

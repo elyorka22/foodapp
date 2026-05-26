@@ -5,7 +5,7 @@
 | Droplet | Services | Compose file |
 |---------|----------|--------------|
 | **Backend** | NestJS API :4000, PostgreSQL, Redis, BullMQ workers | `docker-compose.backend.yml` |
-| **Frontend** | Customer, Admin, Restaurant, Business, Courier + Nginx | `docker-compose.frontend.yml` |
+| **Frontend** | Single Next.js app (`@foodmarket/web`) + Nginx | `docker-compose.frontend.yml` |
 
 Point `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_WS_URL` on the frontend droplet to the backend public IP/domain.
 
@@ -32,9 +32,17 @@ NEXT_PUBLIC_WS_URL=wss://api.foodmarket.uz
 docker compose -f docker-compose.frontend.yml up -d --build
 ```
 
+Frontend build on the VPS (if building outside Docker):
+
+```bash
+npm run build -w @foodmarket/web
+```
+
+Routes: `/customer` (storefront), `/admin`, `/restaurant`, `/business`, `/courier`.
+
 DNS (example):
 
-- `foodmarket.uz` → frontend
+- `foodmarket.uz` → frontend (`/customer` storefront; `/` redirects)
 - `admin.foodmarket.uz` → frontend
 - `api.foodmarket.uz` → **backend** (or proxy API through frontend nginx)
 

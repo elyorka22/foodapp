@@ -2,24 +2,28 @@
 
 ## What changed
 
-Five separate Next.js apps (`customer`, `admin`, `courier`, `business`, `restaurant`) were merged into **one** app: `@foodmarket/web`.
+Five separate Next.js apps (`customer`, `admin`, `courier`, `business`, `restaurant`) were merged into **one** app: `@foodmarket/web` in `apps/web`.
 
 ## Routes
 
 | URL | Panel |
 |-----|--------|
-| `/` | Customer (home) |
-| `/restaurants`, `/restaurants/[slug]`, `/shops`, `/cart`, … | Customer |
+| `/` | Redirect → `/customer` |
+| `/customer` | Customer home |
+| `/customer/restaurants`, `/customer/cart`, `/customer/checkout`, … | Customer storefront |
 | `/admin` | Admin dashboard |
 | `/admin/ops`, `/admin/incidents`, … | Admin tools |
 | `/courier` | Courier |
-| `/business` | Business |
-| `/restaurant`, `/restaurant/orders`, `/restaurant/menu` | Restaurant |
+| `/business` | Business panel |
+| `/restaurant` | Restaurant panel (menu & orders) |
+
+Customer venue pages live under `/customer/restaurants/[slug]` and `/customer/shop/[slug]` so they do not clash with the `/restaurant` partner panel.
 
 ## Subdomains (optional)
 
 `middleware.ts` rewrites legacy hosts to path prefixes:
 
+- `www.foodmarket.uz` → `/customer/*`
 - `admin.foodmarket.uz` → `/admin/*`
 - `courier.foodmarket.uz` → `/courier/*`
 - etc.
@@ -27,7 +31,7 @@ Five separate Next.js apps (`customer`, `admin`, `courier`, `business`, `restaur
 ## Docker
 
 **Before:** 5 Next.js containers + nginx  
-**After:** 1 `web` container + nginx
+**After:** 1 `web` container (`infrastructure/docker/Dockerfile.web`) + nginx
 
 ```bash
 docker compose -f docker-compose.frontend.yml up -d --build
@@ -37,7 +41,15 @@ docker compose -f docker-compose.frontend.yml up -d --build
 
 ```bash
 npm install
-npm run dev:web   # http://localhost:3000
+npm run dev:web   # http://localhost:3000/customer
+```
+
+## Build (production)
+
+Only one frontend build command:
+
+```bash
+npm run build -w @foodmarket/web
 ```
 
 ## Environment
