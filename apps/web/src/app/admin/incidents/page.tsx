@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Sidebar, Button, Input } from '@foodmarket/ui';
-import { adminNav } from '@/lib/admin-nav';
+import { getAdminNav } from '@/lib/admin-nav';
+import { t } from '@/i18n';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
@@ -98,15 +99,15 @@ export default function IncidentsPage() {
 
   return (
     <div className="min-h-screen md:pl-64">
-      <Sidebar title="Operator" items={adminNav} accent="OPS" />
+      <Sidebar title={t('roles.operator')} items={getAdminNav()} accent="OPS" />
       <main className="p-4 md:p-6">
-        <h1 className="text-xl font-bold">Incident center</h1>
+        <h1 className="text-xl font-bold">{t('admin.incidents.title')}</h1>
         {center && (
           <div className="flex flex-wrap gap-2 mt-3">
-            <Stat label="Ochiq" value={center.stats.open} />
-            <Stat label="Jarayonda" value={center.stats.inProgress} />
-            <Stat label="Kritik" value={center.stats.critical} alert />
-            <Stat label="Bugun yopilgan" value={center.stats.resolvedToday} />
+            <Stat label={t('admin.incidents.open')} value={center.stats.open} />
+            <Stat label={t('admin.incidents.inProgress')} value={center.stats.inProgress} />
+            <Stat label={t('admin.incidents.critical')} value={center.stats.critical} alert />
+            <Stat label={t('admin.incidents.resolvedToday')} value={center.stats.resolvedToday} />
           </div>
         )}
 
@@ -120,7 +121,7 @@ export default function IncidentsPage() {
                 filter === f ? 'bg-brand-600 text-white' : 'bg-gray-100'
               }`}
             >
-              {f === 'all' ? 'Hammasi' : f}
+              {f === 'all' ? t('admin.incidents.filterAll') : t(`admin.severity.${f}`)}
             </button>
           ))}
         </div>
@@ -142,35 +143,37 @@ export default function IncidentsPage() {
                     {inc.severity}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{inc.type.replace(/_/g, ' ')} · {inc.status}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {inc.type.replace(/_/g, ' ')} · {t(`admin.incidentStatus.${inc.status}`)}
+                </p>
                 {inc.order && (
                   <p className="text-xs mt-1">{inc.order.orderNumber} — {inc.order.restaurant?.name ?? inc.order.business?.name}</p>
                 )}
               </button>
             ))}
-            {list.length === 0 && <p className="text-sm text-gray-400">Hozircha incident yo&apos;q</p>}
+            {list.length === 0 && <p className="text-sm text-gray-400">{t('admin.incidents.empty')}</p>}
           </section>
 
           <section className="bg-white rounded-2xl border p-4 space-y-3">
             {!selected ? (
-              <p className="text-sm text-gray-400">Incident tanlang</p>
+              <p className="text-sm text-gray-400">{t('admin.incidents.selectOne')}</p>
             ) : (
               <>
                 <h2 className="font-bold text-sm">{selected.title}</h2>
                 <p className="text-xs text-gray-600">{selected.description}</p>
                 <div className="flex gap-2">
                   <Button size="sm" variant="secondary" onClick={() => setStatus('IN_PROGRESS')}>
-                    Boshlash
+                    {t('admin.incidents.start')}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setStatus('DISMISSED')}>
-                    Rad etish
+                    {t('admin.incidents.dismiss')}
                   </Button>
                 </div>
-                <Input placeholder="Yechim eslatmasi" value={resolveNote} onChange={(e) => setResolveNote(e.target.value)} />
+                <Input placeholder={t('admin.incidents.resolveNote')} value={resolveNote} onChange={(e) => setResolveNote(e.target.value)} />
                 <Button size="sm" fullWidth disabled={!resolveNote.trim()} onClick={resolve}>
-                  Yechilgan deb belgilash
+                  {t('admin.incidents.markResolved')}
                 </Button>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase mt-4">Timeline</h3>
+                <h3 className="text-xs font-semibold text-gray-500 uppercase mt-4">{t('admin.incidents.timeline')}</h3>
                 <ul className="text-xs space-y-2 max-h-48 overflow-y-auto">
                   {timeline.map((t, i) => (
                     <li key={i} className="border-l-2 border-gray-200 pl-2">

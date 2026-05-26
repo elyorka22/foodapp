@@ -1,43 +1,39 @@
 'use client';
 
 import { Sidebar, StatCard, Badge } from '@foodmarket/ui';
+import { getRestaurantNav } from '@/lib/restaurant-nav';
+import { t, orderStatus } from '@/i18n';
 
-const nav = [
-  { href: '/restaurant', label: 'Dashboard' },
-  { href: '/restaurant/orders', label: 'Live orders' },
-  { href: '/restaurant/menu', label: 'Menu & products' },
-  { href: '/restaurant/hours', label: 'Opening hours' },
-  { href: '/restaurant/reviews', label: 'Reviews' },
-];
-
-const PIPELINE = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'COURIER_ASSIGNED'];
+const PIPELINE = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'COURIER_ASSIGNED'] as const;
 
 export default function RestaurantPanel() {
   return (
     <div className="min-h-screen md:pl-64">
-      <Sidebar title="Restaurant" items={nav} accent="Partner" />
+      <Sidebar title={t('restaurantPanel.nav.dashboard')} items={getRestaurantNav()} accent={t('roles.partner')} />
       <main className="p-6 md:p-8">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">Green Bowl Kitchen</h1>
-          <Badge variant="success">Open</Badge>
+          <h1 className="text-2xl font-bold">{t('restaurantPanel.title')}</h1>
+          <Badge variant="success">{t('restaurantPanel.open')}</Badge>
         </div>
         <div className="grid sm:grid-cols-3 gap-4 mt-8">
-          <StatCard label="Orders today" value={12} />
-          <StatCard label="Avg prep" value="25 min" />
-          <StatCard label="Rating" value="4.8 ★" />
+          <StatCard label={t('restaurantPanel.ordersToday')} value={12} />
+          <StatCard label={t('restaurantPanel.avgPrep')} value="25 daq" />
+          <StatCard label={t('restaurantPanel.rating')} value="4.8 ★" />
         </div>
         <section className="mt-8 bg-white rounded-2xl border p-6">
-          <h2 className="font-semibold">Order pipeline</h2>
+          <h2 className="font-semibold">{t('restaurantPanel.pipeline')}</h2>
           <div className="flex flex-wrap gap-2 mt-4">
             {PIPELINE.map((s) => (
-              <span key={s} className="px-3 py-1.5 bg-brand-50 text-brand-800 rounded-lg text-xs font-medium">{s.replace(/_/g, ' ')}</span>
+              <span key={s} className="px-3 py-1.5 bg-brand-50 text-brand-800 rounded-lg text-xs font-medium">
+                {orderStatus(s)}
+              </span>
             ))}
           </div>
-          <p className="text-sm text-gray-500 mt-4">PATCH /orders/:id/status — restaurant owner JWT</p>
+          <p className="text-sm text-gray-500 mt-4">{t('restaurantPanel.pipelineHint')}</p>
         </section>
         <section className="mt-6 bg-white rounded-2xl border p-6">
-          <h2 className="font-semibold">Menu CRUD</h2>
-          <p className="text-sm text-gray-500 mt-2">POST/PATCH/DELETE /api/v1/products · Manage menus via Prisma</p>
+          <h2 className="font-semibold">{t('restaurantPanel.menuCrud')}</h2>
+          <p className="text-sm text-gray-500 mt-2">{t('restaurantPanel.menuCrudHint')}</p>
         </section>
       </main>
     </div>

@@ -68,14 +68,14 @@ export interface DeliveryFeeQuote {
 }
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: 'Order placed',
-  CONFIRMED: 'Confirmed',
-  PREPARING: 'Preparing your order',
-  READY_FOR_PICKUP: 'Ready for pickup',
-  COURIER_ASSIGNED: 'Courier assigned',
-  PICKED_UP: 'Picked up',
-  ON_THE_WAY: 'On the way',
-  DELIVERED: 'Delivered',
-  CANCELLED: 'Cancelled',
-  REFUNDED: 'Refunded',
+  PENDING: 'Buyurtma qabul qilindi',
+  CONFIRMED: 'Tasdiqlandi',
+  PREPARING: 'Tayyorlanmoqda',
+  READY_FOR_PICKUP: 'Olib ketishga tayyor',
+  COURIER_ASSIGNED: 'Kuryer tayinlandi',
+  PICKED_UP: 'Olib ketildi',
+  ON_THE_WAY: "Yo'lda",
+  DELIVERED: 'Yetkazildi',
+  CANCELLED: 'Bekor qilindi',
+  REFUNDED: 'Qaytarildi',
 };

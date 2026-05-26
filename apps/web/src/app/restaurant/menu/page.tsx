@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { Sidebar, Button, Input } from '@foodmarket/ui';
+import { getRestaurantNav } from '@/lib/restaurant-nav';
+import { t } from '@/i18n';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-const nav = [
-  { href: '/restaurant', label: 'Dashboard' },
-  { href: '/restaurant/orders', label: 'Buyurtmalar' },
-  { href: '/restaurant/menu', label: 'Menyu' },
-];
 
 interface Product {
   id: string;
@@ -63,29 +60,29 @@ export default function MenuPage() {
 
   return (
     <div className="min-h-screen md:pl-64">
-      <Sidebar title="Restoran" items={nav} />
+      <Sidebar title={t('restaurantPanel.nav.dashboard')} items={getRestaurantNav()} />
       <main className="p-6 max-w-2xl">
-        <h1 className="text-2xl font-bold">Menyu boshqaruvi</h1>
+        <h1 className="text-2xl font-bold">{t('restaurantPanel.menuManage')}</h1>
         <div className="mt-6 bg-white rounded-2xl border p-4 space-y-3">
-          <Input label="Nomi" value={name} onChange={(e) => setName(e.target.value)} />
-          <Input label="Narx (so'm)" value={price} onChange={(e) => setPrice(e.target.value)} />
-          <Button onClick={addProduct}>Qo&apos;shish</Button>
+          <Input label={t('restaurantPanel.productName')} value={name} onChange={(e) => setName(e.target.value)} />
+          <Input label={t('restaurantPanel.productPrice')} value={price} onChange={(e) => setPrice(e.target.value)} />
+          <Button onClick={addProduct}>{t('restaurantPanel.addProduct')}</Button>
         </div>
         <div className="mt-6 space-y-2">
           {products.map((p) => (
             <div key={p.id} className="flex justify-between items-center bg-white border rounded-xl p-3">
               <div>
                 <p className="font-medium">{p.name}</p>
-                <p className="text-sm text-brand-700">{Number(p.price).toLocaleString()} so&apos;m</p>
+                <p className="text-sm text-brand-700">{Number(p.price).toLocaleString('uz-UZ')} so&apos;m</p>
               </div>
               <button
                 type="button"
                 onClick={() => toggle(p.id, p.isAvailable)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold ${
+                className={`px-3 py-1 rounded-lg text-xs font-semibold touch-auto min-h-0 ${
                   p.isAvailable ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'
                 }`}
               >
-                {p.isAvailable ? 'Mavjud' : 'Yopiq'}
+                {p.isAvailable ? t('restaurantPanel.available') : t('restaurantPanel.unavailable')}
               </button>
             </div>
           ))}

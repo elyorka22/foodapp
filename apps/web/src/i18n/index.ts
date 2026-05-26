@@ -38,4 +38,11 @@ export function useTranslations() {
   return { t, locale: currentLocale };
 }
 
+/** Order status label for panels and tracking */
+export function orderStatus(status: string): string {
+  const key = `orderStatus.${status}`;
+  const label = t(key);
+  return label === key ? t(`orders.status.${status}`) : label;
+}
+
 export { uz };

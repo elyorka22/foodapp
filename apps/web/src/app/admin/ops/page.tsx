@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Sidebar, Button, Input } from '@foodmarket/ui';
-import { adminNav } from '@/lib/admin-nav';
+import { getAdminNav } from '@/lib/admin-nav';
+import { orderStatus, t } from '@/i18n';
 import { checkCriticalAlert } from '@/lib/ops-alerts';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -112,11 +113,11 @@ export default function OpsLivePage() {
   const token = () => localStorage.getItem('accessToken');
 
   const authFetch = useCallback(async (path: string, init?: RequestInit) => {
-    const t = token();
-    if (!t) throw new Error('Login required');
+    const accessToken = token();
+    if (!accessToken) throw new Error(t('admin.ops.loginRequired'));
     const res = await fetch(`${API}${path}`, {
       ...init,
-      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json', ...init?.headers },
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', ...init?.headers },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
@@ -154,7 +155,7 @@ export default function OpsLivePage() {
     try {
       await Promise.all([loadBoard(), loadRestaurants(), loadQueues()]);
       if (selectedRef.current) await loadSuggestions(selectedRef.current);
-      setFlash('Yangilandi');
+      setFlash(t('admin.ops.refreshed'));
       setTimeout(() => setFlash(null), 1500);
     } finally {
       setLoading(false);
@@ -211,16 +212,16 @@ export default function OpsLivePage() {
 
   return (
     <div className="min-h-screen md:pl-64">
-      <Sidebar title="Operator" items={adminNav} accent="OPS" />
+      <Sidebar title={t('roles.operator')} items={getAdminNav()} accent="OPS" />
       <main className="p-4 md:p-6">
         <div className="flex flex-wrap gap-3 justify-between items-center">
           <div>
-            <h1 className="text-xl font-bold">Operations center</h1>
+            <h1 className="text-xl font-bold">{t('admin.ops.title')}</h1>
             <p className="text-xs text-gray-500 mt-1">
-              <kbd className="px-1 bg-gray-100 rounded">R</kbd> yangilash ·{' '}
-              <kbd className="px-1 bg-gray-100 rounded">A</kbd> kuryer ·{' '}
-              <kbd className="px-1 bg-gray-100 rounded">1</kbd> birinchi buyurtma ·{' '}
-              <Link href="/admin/incidents" className="text-brand-600 underline">Incidents</Link>
+              <kbd className="px-1 bg-gray-100 rounded">R</kbd> {t('admin.ops.shortcuts')} ·{' '}
+              <kbd className="px-1 bg-gray-100 rounded">A</kbd> {t('admin.ops.courierKey')} ·{' '}
+              <kbd className="px-1 bg-gray-100 rounded">1</kbd> {t('admin.ops.firstOrderKey')} ·{' '}
+              <Link href="/admin/incidents" className="text-brand-600 underline">{t('admin.ops.incidentsLink')}</Link>
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -228,11 +229,15 @@ export default function OpsLivePage() {
             {board && (
               <>
                 <span className="text-xs px-2 py-1 rounded-full bg-gray-100">
-                  {board.stats.total} faol · {board.stats.critical} kritik · {board.stats.unassignedReady} kuryersiz
+                  {t('admin.ops.activeStats', {
+                    total: board.stats.total,
+                    critical: board.stats.critical,
+                    unassigned: board.stats.unassignedReady,
+                  })}
                 </span>
                 {(board.stats.slaBreached ?? 0) > 0 && (
                   <span className="text-xs px-2 py-1 rounded-full bg-red-600 text-white animate-pulse">
-                    SLA: {board.stats.slaBreached}
+                    {t('admin.ops.slaBreached', { count: board.stats.slaBreached ?? 0 })}
                   </span>
                 )}
               </>
@@ -245,22 +250,26 @@ export default function OpsLivePage() {
               {soundOn ? '🔔' : '🔕'}
             </button>
             <Button size="sm" variant="secondary" onClick={refreshAll} disabled={loading}>
-              {loading ? '...' : 'Yangilash (R)'}
+              {loading ? '...' : t('admin.ops.refresh')}
             </Button>
           </div>
         </div>
 
         <div className="flex gap-2 mt-4 border-b">
-          {(['board', 'restaurants', 'queues'] as const).map((t) => (
+          {(['board', 'restaurants', 'queues'] as const).map((tabId) => (
             <button
-              key={t}
+              key={tabId}
               type="button"
-              onClick={() => setTab(t)}
+              onClick={() => setTab(tabId)}
               className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px touch-auto min-h-0 ${
-                tab === t ? 'border-brand-600 text-brand-700' : 'border-transparent text-gray-500'
+                tab === tabId ? 'border-brand-600 text-brand-700' : 'border-transparent text-gray-500'
               }`}
             >
-              {t === 'board' ? 'Buyurtmalar' : t === 'restaurants' ? 'Restoranlar' : 'Navbatlar'}
+              {tabId === 'board'
+                ? t('admin.ops.tabOrders')
+                : tabId === 'restaurants'
+                  ? t('admin.ops.tabRestaurants')
+                  : t('admin.ops.tabQueues')}
             </button>
           ))}
         </div>
@@ -272,7 +281,7 @@ export default function OpsLivePage() {
                 {board?.byStatus.map((col) => (
                   <div key={col.status} className="w-56 shrink-0">
                     <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-xs font-bold uppercase text-gray-500">{col.status.replace(/_/g, ' ')}</h3>
+                      <h3 className="text-xs font-bold uppercase text-gray-500">{orderStatus(col.status)}</h3>
                       <span className="text-xs bg-gray-200 rounded-full px-2">{col.count}</span>
                     </div>
                     <div className="space-y-2 max-h-[70vh] overflow-y-auto">
@@ -314,7 +323,7 @@ export default function OpsLivePage() {
 
             <section className="space-y-3">
               <div className="bg-white rounded-2xl border p-3 max-h-48 overflow-auto">
-                <h2 className="font-semibold text-xs text-gray-500 uppercase">Kuryerlar</h2>
+                <h2 className="font-semibold text-xs text-gray-500 uppercase">{t('admin.ops.couriers')}</h2>
                 {board?.couriers.map((c) => (
                   <button
                     key={c.id}
@@ -325,9 +334,9 @@ export default function OpsLivePage() {
                     }`}
                   >
                     <span className="font-medium">{c.user.firstName}</span> · {c.status}
-                    <span className="text-gray-400 block">{c.activeOrders} faol</span>
+                    <span className="text-gray-400 block">{t('admin.ops.activeCount', { count: c.activeOrders })}</span>
                     {c.idleWarning && (
-                      <span className="text-amber-600 block">Kutmoqda {c.idleMinutes}m</span>
+                      <span className="text-amber-600 block">{t('admin.ops.waitingIdle', { min: c.idleMinutes ?? 0 })}</span>
                     )}
                   </button>
                 ))}
@@ -336,11 +345,11 @@ export default function OpsLivePage() {
               {selected && (
                 <div className="bg-white rounded-2xl border p-4 space-y-2">
                   <h2 className="font-semibold text-sm">{selected.orderNumber}</h2>
-                  <p className="text-xs text-gray-500">{selected.status} · {selected.guestPhone ?? '—'}</p>
+                  <p className="text-xs text-gray-500">{orderStatus(selected.status)} · {selected.guestPhone ?? '—'}</p>
 
                   {suggestions.length > 0 && (
                     <div className="border rounded-xl p-2 bg-brand-50/50">
-                      <p className="text-xs font-semibold text-brand-800">Tavsiya (qo'lda tayinlash)</p>
+                      <p className="text-xs font-semibold text-brand-800">{t('admin.ops.dispatchSuggest')}</p>
                       {suggestions.slice(0, 3).map((s, i) => (
                         <button
                           key={s.courierId}
@@ -349,16 +358,16 @@ export default function OpsLivePage() {
                           className="w-full text-left mt-1 p-2 rounded-lg bg-white border text-xs touch-auto min-h-0"
                         >
                           {i === 0 && <span className="text-brand-600 font-bold">★ </span>}
-                          {s.name} — {s.score} ball · {s.distanceKm.toFixed(1)} km
+                          {s.name} — {t('admin.ops.scoreBall', { score: s.score })} · {s.distanceKm.toFixed(1)} km
                           <span className="block text-gray-400">{s.reasons.join(', ')}</span>
                         </button>
                       ))}
                     </div>
                   )}
 
-                  <Input placeholder="Courier ID" value={courierId} onChange={(e) => setCourierId(e.target.value)} />
+                  <Input placeholder={t('admin.ops.courierIdPlaceholder')} value={courierId} onChange={(e) => setCourierId(e.target.value)} />
                   <Button size="sm" fullWidth disabled={!courierId} onClick={() => opsPost('/assign-courier', { courierId })}>
-                    Tayinlash
+                    {t('admin.ops.assign')}
                   </Button>
                   <Button
                     size="sm"
@@ -367,21 +376,21 @@ export default function OpsLivePage() {
                     disabled={!courierId}
                     onClick={() => opsPost('/reassign-courier', { courierId, note })}
                   >
-                    Qayta tayinlash
+                    {t('admin.ops.reassign')}
                   </Button>
-                  <Button size="sm" fullWidth variant="ghost" onClick={() => opsPost('/retry-delivery', { note: note || 'Qayta urinish' })}>
-                    Yetkazishni qayta boshlash
+                  <Button size="sm" fullWidth variant="ghost" onClick={() => opsPost('/retry-delivery', { note: note || t('common.retry') })}>
+                    {t('admin.ops.retryDelivery')}
                   </Button>
-                  <Input placeholder="Eslatma" value={note} onChange={(e) => setNote(e.target.value)} />
+                  <Input placeholder={t('admin.ops.notePlaceholder')} value={note} onChange={(e) => setNote(e.target.value)} />
                   <Button size="sm" fullWidth variant="ghost" disabled={!note} onClick={() => opsPost('/note', { note })}>
-                    Eslatma qo'shish
+                    {t('admin.ops.addNote')}
                   </Button>
-                  <Input placeholder="Sabab" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
+                  <Input placeholder={t('admin.ops.reasonPlaceholder')} value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
                   <Button size="sm" fullWidth variant="danger" disabled={!cancelReason} onClick={() => opsPost('/emergency-cancel', { reason: cancelReason })}>
-                    Favqulodda bekor
+                    {t('admin.ops.emergencyCancel')}
                   </Button>
                   <Button size="sm" fullWidth variant="danger" disabled={!cancelReason} onClick={() => opsPost('/mark-failed', { reason: cancelReason })}>
-                    Yetkazilmadi
+                    {t('admin.ops.markFailed')}
                   </Button>
                 </div>
               )}
@@ -399,14 +408,16 @@ export default function OpsLivePage() {
                 <div className="flex justify-between">
                   <h3 className="font-semibold">{r.name}</h3>
                   <span className={`text-xs px-2 py-0.5 rounded ${r.isOpen ? 'bg-green-100 text-green-800' : 'bg-gray-200'}`}>
-                    {r.isOpen ? 'Ochiq' : 'Yopiq'}
+                    {r.isOpen ? t('admin.ops.open') : t('admin.ops.closed')}
                   </span>
                 </div>
-                <p className="text-sm mt-2">{r.activeOrders} faol buyurtma</p>
-                {r.oldestWaitMin > 0 && <p className="text-xs text-amber-700">Eng uzoq kutish: {r.oldestWaitMin} daq</p>}
+                <p className="text-sm mt-2">{t('admin.ops.activeOrders', { count: r.activeOrders })}</p>
+                {r.oldestWaitMin > 0 && (
+                  <p className="text-xs text-amber-700">{t('admin.ops.longestWait', { min: r.oldestWaitMin })}</p>
+                )}
                 {r.responseWarning && (
                   <p className="text-xs text-red-600 font-medium animate-pulse">
-                    Javob: {r.responseTimerMin} daq (PENDING)
+                    {t('admin.ops.responsePending', { min: r.responseTimerMin ?? 0 })}
                   </p>
                 )}
               </div>

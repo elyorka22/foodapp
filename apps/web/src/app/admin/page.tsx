@@ -3,8 +3,8 @@
 import { Sidebar, StatCard } from '@foodmarket/ui';
 import { useEffect, useState } from 'react';
 import { panelApi } from '@/lib/panel-api';
-
-import { adminNav } from '@/lib/admin-nav';
+import { getAdminNav } from '@/lib/admin-nav';
+import { t } from '@/i18n';
 
 interface Dashboard {
   totalOrders: number;
@@ -41,25 +41,25 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen md:pl-64">
-      <Sidebar title="Admin" items={adminNav} accent="FoodMarket UZ" />
+      <Sidebar title={t('roles.admin')} items={getAdminNav()} accent="FoodMarket UZ" />
       <main className="p-6 md:p-8">
-        <h1 className="text-2xl font-bold">Platforma ko&apos;rinishi</h1>
+        <h1 className="text-2xl font-bold">{t('admin.title')}</h1>
         <div className="flex gap-2 mt-4">
           <input type="date" className="border rounded-lg px-2 text-sm" value={from} onChange={(e) => setFrom(e.target.value)} />
           <input type="date" className="border rounded-lg px-2 text-sm" value={to} onChange={(e) => setTo(e.target.value)} />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-          <StatCard label="Bugun buyurtmalar" value={stats?.todayOrders ?? '—'} />
-          <StatCard label="Daromad" value={stats ? formatUzs(stats.totalRevenue) : '—'} />
-          <StatCard label="O'rtacha yetkazish" value={stats ? `${stats.avgDeliveryMinutes} daq` : '—'} />
-          <StatCard label="Faol kuryerlar" value={stats?.activeCouriers ?? '—'} />
-          <StatCard label="Bekor qilingan" value={stats?.failedOrders ?? '—'} />
-          <StatCard label="Jami buyurtmalar" value={stats?.totalOrders ?? '—'} />
+          <StatCard label={t('admin.dashboard.todayOrders')} value={stats?.todayOrders ?? '—'} />
+          <StatCard label={t('admin.dashboard.revenue')} value={stats ? formatUzs(stats.totalRevenue) : '—'} />
+          <StatCard label={t('admin.dashboard.avgDelivery')} value={stats ? `${stats.avgDeliveryMinutes} daq` : '—'} />
+          <StatCard label={t('admin.dashboard.activeCouriers')} value={stats?.activeCouriers ?? '—'} />
+          <StatCard label={t('admin.dashboard.cancelled')} value={stats?.failedOrders ?? '—'} />
+          <StatCard label={t('admin.dashboard.totalOrders')} value={stats?.totalOrders ?? '—'} />
         </div>
 
         {stats?.peakHours && (
           <section className="mt-8 bg-white rounded-2xl border p-6">
-            <h2 className="font-semibold mb-4">Band soatlar</h2>
+            <h2 className="font-semibold mb-4">{t('admin.dashboard.peakHours')}</h2>
             <div className="flex items-end gap-1 h-32">
               {stats.peakHours.map((p) => (
                 <div key={p.hour} className="flex-1 flex flex-col items-center gap-1">
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
 
         {stats?.topRestaurants && stats.topRestaurants.length > 0 && (
           <section className="mt-6 bg-white rounded-2xl border p-6">
-            <h2 className="font-semibold mb-3">Top restoranlar</h2>
+            <h2 className="font-semibold mb-3">{t('admin.dashboard.topRestaurants')}</h2>
             <ul className="space-y-2">
               {stats.topRestaurants.map((r, i) => (
                 <li key={i} className="flex justify-between text-sm">

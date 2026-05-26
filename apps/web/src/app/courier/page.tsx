@@ -6,6 +6,7 @@ import { Button, Badge } from '@foodmarket/ui';
 import { api, formatUzs, getToken, WS } from '@/lib/api';
 import { queueLocation, flushQueue, queueSize } from '@/lib/offline-queue';
 import { useOnlineStatus } from '@foodmarket/ui';
+import { orderStatus, t } from '@/i18n';
 
 interface CourierProfile {
   id: string;
@@ -138,7 +139,7 @@ export default function CourierPanel() {
 
   async function toggleOnline() {
     if (!profile) {
-      alert('courier@foodmarket.uz bilan kiring');
+      alert(t('courier.loginAlert'));
       return;
     }
     const next = !online;
@@ -165,45 +166,51 @@ export default function CourierPanel() {
   };
 
   return (
-    <div className="max-w-md mx-auto min-h-screen p-4 pb-8 bg-gray-50">
+    <div className="max-w-md mx-auto min-h-screen p-4 pb-8 bg-surface">
       <header className="flex justify-between items-center py-4">
-        <h1 className="text-xl font-bold">Kuryer</h1>
+        <h1 className="text-xl font-bold">{t('courier.title')}</h1>
         <div className="flex gap-2">
-          {!isOnline && <Badge variant="warning">Internet yo&apos;q</Badge>}
-          <Badge variant={online ? 'success' : 'default'}>{online ? 'Onlayn' : 'Oflayn'}</Badge>
+          {!isOnline && <Badge variant="warning">{t('courier.offlineNet')}</Badge>}
+          <Badge variant={online ? 'success' : 'default'}>
+            {online ? t('courier.online') : t('courier.offline')}
+          </Badge>
         </div>
       </header>
 
       {earnings && (
         <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="bg-white rounded-xl p-3 border text-center">
-            <p className="text-xs text-gray-500">Daromad</p>
+          <div className="bg-white rounded-xl p-3 border text-center shadow-card">
+            <p className="text-xs text-gray-500">{t('courier.earnings')}</p>
             <p className="font-bold text-sm">{formatUzs(earnings.totalEarnings)}</p>
           </div>
-          <div className="bg-white rounded-xl p-3 border text-center">
-            <p className="text-xs text-gray-500">Yetkazish</p>
+          <div className="bg-white rounded-xl p-3 border text-center shadow-card">
+            <p className="text-xs text-gray-500">{t('courier.deliveries')}</p>
             <p className="font-bold text-sm">{earnings.orders}</p>
           </div>
-          <div className="bg-white rounded-xl p-3 border text-center">
-            <p className="text-xs text-gray-500">Km</p>
+          <div className="bg-white rounded-xl p-3 border text-center shadow-card">
+            <p className="text-xs text-gray-500">{t('courier.km')}</p>
             <p className="font-bold text-sm">{earnings.totalKm}</p>
           </div>
         </div>
       )}
 
       <Button fullWidth onClick={toggleOnline} variant={online ? 'danger' : 'primary'}>
-        {online ? 'Oflayn bo\'lish' : 'Onlayn bo\'lish'}
+        {online ? t('courier.goOffline') : t('courier.goOnline')}
       </Button>
-      {lastPing && <p className="text-xs text-center text-gray-400 mt-2">GPS: {lastPing}</p>}
+      {lastPing && (
+        <p className="text-xs text-center text-gray-400 mt-2">{t('courier.gpsPing', { time: lastPing })}</p>
+      )}
       {queuedCount > 0 && (
-        <p className="text-xs text-center text-amber-600 mt-1">{queuedCount} GPS navbatda (sinxronlash)</p>
+        <p className="text-xs text-center text-amber-600 mt-1">
+          {t('courier.gpsQueued', { count: queuedCount })}
+        </p>
       )}
 
       <section className="mt-6 space-y-3">
-        <h2 className="font-semibold">Faol buyurtmalar</h2>
-        {orders.length === 0 && <p className="text-sm text-gray-500">Buyurtmalar yo&apos;q</p>}
+        <h2 className="font-semibold">{t('courier.activeOrders')}</h2>
+        {orders.length === 0 && <p className="text-sm text-gray-500">{t('courier.noOrders')}</p>}
         {orders.map((o) => (
-          <div key={o.id} className="bg-white rounded-2xl p-4 border">
+          <div key={o.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-card">
             <p className="font-bold">{o.orderNumber}</p>
             <p className="text-sm text-gray-500">{o.restaurant?.name}</p>
             <p className="text-xs mt-1">{o.deliveryAddress.street}</p>
@@ -215,16 +222,14 @@ export default function CourierPanel() {
                 size="sm"
                 onClick={() => advanceOrder(o.id, stepMap[o.status])}
               >
-                Keyingi: {stepMap[o.status].replace(/_/g, ' ')}
+                {t('courier.nextStep', { status: orderStatus(stepMap[o.status]) })}
               </Button>
             )}
           </div>
         ))}
       </section>
 
-      <p className="text-xs text-gray-400 mt-6 text-center">
-        Login: courier@foodmarket.uz / Password123!
-      </p>
+      <p className="text-xs text-gray-400 mt-6 text-center">{t('courier.loginHint')}</p>
     </div>
   );
 }

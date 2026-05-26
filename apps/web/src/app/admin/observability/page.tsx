@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Sidebar } from '@foodmarket/ui';
-import { adminNav } from '@/lib/admin-nav';
+import { getAdminNav } from '@/lib/admin-nav';
+import { t } from '@/i18n';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
@@ -31,10 +32,10 @@ export default function ObservabilityPage() {
   const [data, setData] = useState<Observability | null>(null);
 
   const load = useCallback(async () => {
-    const t = localStorage.getItem('accessToken');
-    if (!t) return;
+    const accessToken = localStorage.getItem('accessToken');
+    if (!accessToken) return;
     const res = await fetch(`${API}/monitoring/observability`, {
-      headers: { Authorization: `Bearer ${t}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (res.ok) setData(await res.json());
   }, []);
@@ -47,49 +48,49 @@ export default function ObservabilityPage() {
 
   return (
     <div className="min-h-screen md:pl-64">
-      <Sidebar title="Operator" items={adminNav} accent="OPS" />
+      <Sidebar title={t('roles.operator')} items={getAdminNav()} accent="OPS" />
       <main className="p-4 md:p-6">
-        <h1 className="text-xl font-bold">Observability</h1>
-        <p className="text-sm text-gray-500">5 soniyada yangilanadi</p>
+        <h1 className="text-xl font-bold">{t('admin.observability.title')}</h1>
+        <p className="text-sm text-gray-500">{t('admin.observability.refreshHint')}</p>
 
         {!data ? (
-          <p className="mt-8 text-gray-400">Yuklanmoqda...</p>
+          <p className="mt-8 text-gray-400">{t('common.loading')}</p>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-            <Card title="API" alert={data.http.totalErrors > 10}>
-              <Row label="Uptime" value={`${data.http.uptimeSec}s`} />
-              <Row label="So'rovlar" value={String(data.http.totalRequests)} />
-              <Row label="Xatolar" value={String(data.http.totalErrors)} />
-              <Row label="Heap" value={`${data.http.memory.heapUsedMb} MB`} />
+            <Card title={t('admin.observability.api')} alert={data.http.totalErrors > 10}>
+              <Row label={t('admin.observability.uptime')} value={`${data.http.uptimeSec}s`} />
+              <Row label={t('admin.observability.requests')} value={String(data.http.totalRequests)} />
+              <Row label={t('admin.observability.errors')} value={String(data.http.totalErrors)} />
+              <Row label={t('admin.observability.heap')} value={`${data.http.memory.heapUsedMb} MB`} />
               <Row label="RSS" value={`${data.http.memory.rssMb} MB`} />
             </Card>
 
-            <Card title="WebSocket" alert={data.websocket.reconnectSpike}>
-              <Row label="Faol ulanish" value={String(data.websocket.activeConnections)} />
-              <Row label="Peak" value={String(data.websocket.peakConnections)} />
-              <Row label="Reconnect (5m)" value={String(data.websocket.reconnectsLast5Min)} />
-              <Row label="GPS rad etilgan" value={String(data.websocket.rejectedGps)} />
-              <Row label="Dublikat o'tkazilgan" value={String(data.websocket.duplicateSkipped)} />
+            <Card title={t('admin.observability.websocket')} alert={data.websocket.reconnectSpike}>
+              <Row label={t('admin.observability.activeConn')} value={String(data.websocket.activeConnections)} />
+              <Row label={t('admin.observability.peak')} value={String(data.websocket.peakConnections)} />
+              <Row label={t('admin.observability.reconnect5m')} value={String(data.websocket.reconnectsLast5Min)} />
+              <Row label={t('admin.observability.gpsRejected')} value={String(data.websocket.rejectedGps)} />
+              <Row label={t('admin.observability.dupSkipped')} value={String(data.websocket.duplicateSkipped)} />
             </Card>
 
-            <Card title="Redis" alert={!data.redis.ok}>
-              <Row label="Holat" value={data.redis.ok ? 'OK' : 'DOWN'} />
+            <Card title={t('admin.observability.redis')} alert={!data.redis.ok}>
+              <Row label={t('admin.observability.status')} value={data.redis.ok ? 'OK' : 'DOWN'} />
             </Card>
 
-            <Card title="Navbat: orders" alert={data.queues.latencyHint.waitingHigh}>
+            <Card title={t('admin.observability.queueOrders')} alert={data.queues.latencyHint.waitingHigh}>
               <QueueRows counts={data.queues.orders} />
             </Card>
-            <Card title="Navbat: notifications">
+            <Card title={t('admin.observability.queueNotifications')}>
               <QueueRows counts={data.queues.notifications} />
             </Card>
-            <Card title="Navbat: telegram">
+            <Card title={t('admin.observability.queueTelegram')}>
               <QueueRows counts={data.queues.telegram} />
             </Card>
 
-            <Card title="Sekin so'rovlar" className="sm:col-span-2">
-              <p className="text-xs text-gray-500 mb-2">Chegara: {data.slowQueries.thresholdMs}ms</p>
+            <Card title={t('admin.observability.slowQueries')} className="sm:col-span-2">
+              <p className="text-xs text-gray-500 mb-2">{t('admin.observability.threshold', { ms: data.slowQueries.thresholdMs })}</p>
               {data.slowQueries.recent.length === 0 ? (
-                <p className="text-xs text-green-600">Sekin so'rov yo&apos;q</p>
+                <p className="text-xs text-green-600">{t('admin.observability.noSlowQueries')}</p>
               ) : (
                 <ul className="text-xs space-y-1">
                   {data.slowQueries.recent.map((q, i) => (
@@ -102,7 +103,7 @@ export default function ObservabilityPage() {
               )}
             </Card>
 
-            <Card title="Infratuzilma tayyorligi">
+            <Card title={t('admin.observability.infraReady')}>
               {Object.entries(data.infrastructure).map(([k, v]) => (
                 <Row key={k} label={k} value={String(v ?? '—')} />
               ))}
