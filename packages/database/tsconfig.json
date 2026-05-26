@@ -4,9 +4,8 @@
     "module": "CommonJS",
     "moduleResolution": "Node",
     "rootDir": "src",
-    "outDir": "dist",
-    "composite": true
+    "outDir": "dist"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["dist", "node_modules"]
+  "exclude": ["dist", "node_modules", "prisma"]
 }

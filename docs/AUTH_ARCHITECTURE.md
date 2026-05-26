@@ -72,6 +72,14 @@ Admin sidebar items are filtered by permissions (e.g. Users link requires `manag
 - `PATCH /admin/users/:id/role` — assign role (`manage_roles`)
 - `PATCH /admin/users/:id/deactivate` — invalidate sessions
 
+## Monorepo build
+
+Internal packages must be compiled before the API starts. See [MONOREPO_BUILD.md](./MONOREPO_BUILD.md).
+
+```bash
+npm run build:packages   # after git pull
+```
+
 ## Migration notes
 
 1. Run Prisma migration after adding `MANAGER` and `OPERATOR` to `UserRole` enum:

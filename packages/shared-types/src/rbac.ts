@@ -1,4 +1,4 @@
-import type { PermissionSlug, UserRole } from './index';
+import type { PermissionSlug, UserRole } from './types';
 
 /** Home route after login per role. */
 export const ROLE_HOME: Record<UserRole, string> = {

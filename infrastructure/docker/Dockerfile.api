@@ -1,28 +1,46 @@
+# NestJS API — workspace build order: shared-types → prisma generate → database → api
 FROM node:20-alpine AS base
 WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
 
 FROM base AS deps
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/database/package.json ./packages/database/
 COPY packages/shared-types/package.json ./packages/shared-types/
-RUN npm ci --workspace=@foodmarket/api --workspace=@foodmarket/database --include-workspace-root
+RUN npm ci \
+  --workspace=@foodmarket/api \
+  --workspace=@foodmarket/database \
+  --workspace=@foodmarket/shared-types \
+  --include-workspace-root
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run db:generate
+COPY package.json package-lock.json turbo.json tsconfig.base.json ./
+COPY apps/api ./apps/api
+COPY packages/database ./packages/database
+COPY packages/shared-types ./packages/shared-types
+
+RUN npm run build -w @foodmarket/shared-types
+RUN npm run build -w @foodmarket/database
 RUN npm run build -w @foodmarket/api
 
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nestjs
+RUN apk add --no-cache openssl libc6-compat \
+  && addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 nestjs
+
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/database/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/packages/shared-types/package.json ./packages/shared-types/package.json
+COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
+COPY --from=builder /app/packages/database/package.json ./packages/database/package.json
+COPY --from=builder /app/packages/database/dist ./packages/database/dist
 COPY --from=builder /app/packages/database/prisma ./prisma
-RUN mkdir -p uploads && chown nestjs:nodejs uploads
+
+RUN mkdir -p uploads && chown -R nestjs:nodejs uploads
 USER nestjs
 EXPOSE 4000
 CMD ["node", "dist/main.js"]
