@@ -10,6 +10,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AdminUsersService } from './admin-users.service';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { AssignRoleDto } from './dto/assign-role.dto';
+import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 @ApiTags('admin-users')
 @Controller('admin/users')
@@ -21,8 +22,8 @@ export class AdminUsersController {
 
   @Get()
   @Permissions('manage_users')
-  list(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminUsers.list(parseInt(page ?? '1', 10), parseInt(limit ?? '20', 10));
+  list(@Query() query: PaginationQueryDto) {
+    return this.adminUsers.list(query.page, query.limit);
   }
 
   @Post('staff')

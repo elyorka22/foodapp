@@ -5,6 +5,7 @@ import { RestaurantsService } from './restaurants.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { QueryRestaurantsDto } from './dto/query-restaurants.dto';
 
 @ApiTags('restaurants')
 @Controller('restaurants')
@@ -12,18 +13,8 @@ export class RestaurantsController {
   constructor(private restaurants: RestaurantsService) {}
 
   @Get()
-  findAll(
-    @Query('city') city?: string,
-    @Query('featured') featured?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.restaurants.findAll({
-      city,
-      featured: featured === 'true',
-      page: Number(page),
-      limit: Number(limit),
-    });
+  findAll(@Query() query: QueryRestaurantsDto) {
+    return this.restaurants.findAll(query);
   }
 
   @Get('slug/:slug')

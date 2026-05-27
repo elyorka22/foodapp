@@ -1,14 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { normalizePagination } from '../../common/utils/pagination';
 
 @Injectable()
 export class RestaurantsService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(query: { city?: string; featured?: boolean; page?: number; limit?: number }) {
-    const page = query.page ?? 1;
-    const limit = Math.min(query.limit ?? 20, 50);
+    const { page, limit, skip } = normalizePagination({
+      page: query.page,
+      limit: query.limit,
+      defaultLimit: 20,
+      maxLimit: 50,
+    });
     const where: Prisma.RestaurantWhereInput = { isActive: true };
     if (query.city) where.city = { contains: query.city, mode: 'insensitive' };
     if (query.featured) where.isFeatured = true;
@@ -18,7 +23,7 @@ export class RestaurantsService {
         where,
         include: { openingHours: true, _count: { select: { products: true } } },
         orderBy: [{ isFeatured: 'desc' }, { rating: 'desc' }],
-        skip: (page - 1) * limit,
+        skip,
         take: limit,
       }),
       this.prisma.restaurant.count({ where }),

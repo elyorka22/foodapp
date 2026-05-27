@@ -1,10 +1,11 @@
 import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { UserRole, VendorType } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 import { BusinessesService } from './businesses.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { QueryBusinessesDto } from './dto/query-businesses.dto';
 
 @ApiTags('businesses')
 @Controller('businesses')
@@ -12,13 +13,8 @@ export class BusinessesController {
   constructor(private businesses: BusinessesService) {}
 
   @Get()
-  findAll(
-    @Query('type') type?: VendorType,
-    @Query('city') city?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-  ) {
-    return this.businesses.findAll({ type, city, page: Number(page), limit: Number(limit) });
+  findAll(@Query() query: QueryBusinessesDto) {
+    return this.businesses.findAll(query);
   }
 
   @Get('slug/:slug')

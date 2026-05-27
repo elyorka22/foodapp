@@ -12,6 +12,7 @@ import { TrackingGateway } from '../../gateways/tracking.gateway';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { CancelOrderDto } from './dto/cancel-order.dto';
+import { normalizePagination } from '../../common/utils/pagination';
 
 const STATUS_FLOW: Record<OrderStatus, OrderStatus[]> = {
   PENDING: ['CONFIRMED', 'CANCELLED'],
@@ -207,8 +208,12 @@ export class OrdersService {
     from?: string;
     to?: string;
   }) {
-    const page = filters.page ?? 1;
-    const limit = Math.min(filters.limit ?? 20, 100);
+    const { page, limit, skip } = normalizePagination({
+      page: filters.page,
+      limit: filters.limit,
+      defaultLimit: 20,
+      maxLimit: 100,
+    });
     const where: Prisma.OrderWhereInput = {};
     if (filters.customerId) where.customerId = filters.customerId;
     if (filters.restaurantId) where.restaurantId = filters.restaurantId;
@@ -233,7 +238,7 @@ export class OrdersService {
           courier: { include: { user: { select: { firstName: true, phone: true } } } },
         },
         orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
+        skip,
         take: limit,
       }),
       this.prisma.order.count({ where }),

@@ -4,6 +4,7 @@ import { UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../../common/services/audit.service';
 import { CreateStaffDto } from './dto/create-staff.dto';
+import { normalizePagination } from '../../common/utils/pagination';
 
 @Injectable()
 export class AdminUsersService {
@@ -13,11 +14,12 @@ export class AdminUsersService {
   ) {}
 
   async list(page = 1, limit = 20) {
-    const skip = (page - 1) * limit;
+    const normalized = normalizePagination({ page, limit, defaultLimit: 20, maxLimit: 100 });
+    const { skip } = normalized;
     const [items, total] = await Promise.all([
       this.prisma.user.findMany({
         skip,
-        take: limit,
+        take: normalized.limit,
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
@@ -33,7 +35,13 @@ export class AdminUsersService {
       }),
       this.prisma.user.count(),
     ]);
-    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+    return {
+      items,
+      total,
+      page: normalized.page,
+      limit: normalized.limit,
+      totalPages: Math.ceil(total / normalized.limit),
+    };
   }
 
   async assignRole(actorId: string, userId: string, role: UserRole) {
