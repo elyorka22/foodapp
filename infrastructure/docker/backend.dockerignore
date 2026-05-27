@@ -1,0 +1,23 @@
+# API + worker image context (used via compose build.ignore)
+node_modules
+**/node_modules
+**/.next
+.turbo
+**/dist
+**/*.tsbuildinfo
+
+# Frontend-only workspaces
+apps/web
+packages/ui
+
+.git
+.github
+.cursor
+docs
+**/*.md
+**/*.log
+coverage
+
+.env
+.env.*
+!.env.example

@@ -1,0 +1,23 @@
+# Web image context (used via compose build.ignore)
+node_modules
+**/node_modules
+**/.next
+.turbo
+**/dist
+
+# Backend-only workspaces
+apps/api
+workers
+packages/database
+
+.git
+.github
+.cursor
+docs
+**/*.md
+**/*.log
+coverage
+
+.env
+.env.*
+!.env.example

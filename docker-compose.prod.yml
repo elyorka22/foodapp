@@ -36,12 +36,18 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.api
+      ignore: infrastructure/docker/backend.dockerignore
     container_name: foodmarket-api
     restart: always
     env_file: .env
     environment:
+      NODE_ENV: production
+      PORT: 4000
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+    ports:
+      - "4000:4000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,11 +57,24 @@ services:
       - uploads_data:/app/uploads
     networks:
       - foodmarket
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:4000/api/v1/health/live',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
 
   worker:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.worker
+      ignore: infrastructure/docker/backend.dockerignore
     container_name: foodmarket-worker
     restart: always
     env_file: .env
@@ -72,6 +91,7 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.web
+      ignore: infrastructure/docker/frontend.dockerignore
     container_name: foodmarket-web
     restart: unless-stopped
     env_file: .env

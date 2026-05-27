@@ -1,27 +1,24 @@
-# Dependencies & build output (rebuilt inside the image)
+# Rebuilt inside Docker images
 node_modules
 **/node_modules
 **/.next
-**/dist
 .turbo
+**/dist
+**/*.tsbuildinfo
 
 # Git & IDE
 .git
 .github
 .cursor
-*.md
-docs
 
-# Secrets (inject via env_file at runtime)
+# Secrets (provided via env_file at runtime)
 .env
 .env.*
 !.env.example
 
-# Backend / workers — not needed for @foodmarket/web image
-apps/api
-workers
-packages/database
-
-# Misc
+# Logs & coverage
 **/*.log
 coverage
+
+# NOTE: Do NOT exclude apps/api, packages/database, or packages/shared-types.
+# Backend API/worker images require those paths in the build context.

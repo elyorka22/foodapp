@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: infrastructure/docker/Dockerfile.web
+      ignore: infrastructure/docker/frontend.dockerignore
     container_name: foodmarket-web
     restart: unless-stopped
     env_file: .env

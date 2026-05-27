@@ -1,52 +1,59 @@
-# Monorepo build order
+# Monorepo build & Docker deployment
 
-Internal packages compile to **CommonJS** in `dist/` for Node 20 (NestJS API, workers).
+## Workspace packages
 
-## Packages
+| Package | Path | Build output |
+|---------|------|----------------|
+| `@foodmarket/shared-types` | `packages/shared-types` | `dist/index.js` (CommonJS) |
+| `@foodmarket/database` | `packages/database` | `dist/index.js` + Prisma client |
+| `@foodmarket/api` | `apps/api` | `dist/main.js` |
 
-| Package | Output | Consumed by |
-|---------|--------|-------------|
-| `@foodmarket/shared-types` | `packages/shared-types/dist` | API, Web (transpile), UI |
-| `@foodmarket/database` | `packages/database/dist` + Prisma client | API, workers |
-
-## Commands
+Build order: **shared-types → database → api**
 
 ```bash
-# After git pull — build workspace libraries first
-npm run build:packages
-
-# Full monorepo (Turbo respects ^build dependency order)
-npm run build
-
-# API only (prebuild runs packages)
-npm run build:api
+npm run build:packages   # shared-types + database
+npm run build:api        # packages + nest build
 ```
 
-## Docker (production)
+## TypeScript (API)
 
-`Dockerfile.api` runs:
-
-1. `build -w @foodmarket/shared-types`
-2. `build -w @foodmarket/database` (includes `prisma generate`)
-3. `build -w @foodmarket/api`
-
-The runner image copies `packages/shared-types/dist` and `packages/database/dist` so `require('@foodmarket/shared-types')` resolves at runtime.
-
-## TypeScript resolution (API)
-
-`apps/api/tsconfig.json` maps workspace packages to **source** for compile-time:
+`apps/api/tsconfig.json` maps workspaces to source for compile-time:
 
 ```json
 "@foodmarket/shared-types": ["../../packages/shared-types/src/index.ts"]
 ```
 
-Runtime still resolves via `node_modules` → `dist/index.js` after `npm run build:packages`.
+Runtime resolves `node_modules` → `packages/shared-types/dist/index.js`.
+
+## Docker (backend droplet)
+
+```bash
+docker compose build --no-cache
+docker compose up -d
+docker ps
+```
+
+- **Context**: repo root (`.`)
+- **Dockerfile**: `infrastructure/docker/Dockerfile.api`
+- **Ignore file**: `infrastructure/docker/backend.dockerignore` (excludes `apps/web` only)
+- **Do not** use a root `.dockerignore` that excludes `apps/api` or `packages/database`
+
+### Runtime layout in API container
+
+```
+/app/dist/main.js
+/app/node_modules/@foodmarket/shared-types → ../../packages/shared-types
+/app/packages/shared-types/dist/
+/app/packages/database/dist/
+/app/packages/database/prisma/
+```
 
 ## Troubleshooting
 
-| Error | Fix |
-|-------|-----|
-| `TS2307: Cannot find module '@foodmarket/shared-types'` | Run `npm run build:packages`; ensure `apps/api/tsconfig.json` paths exist |
-| `Cannot find module '@foodmarket/shared-types'` (runtime) | Rebuild shared-types; verify `packages/shared-types/dist` in Docker runner |
-| `Cannot find module '.../dist/rbac'` | Old ESM build; rebuild shared-types (CJS re-exports via `index.js`) |
-| `ERR_REQUIRE_ESM` | Package `main` pointed at ESM; use `dist/index.js` (CommonJS) |
+| Error | Cause | Fix |
+|-------|--------|-----|
+| `TS2307` shared-types | dist missing at compile | Paths in tsconfig; build shared-types first |
+| `ERR_MODULE_NOT_FOUND .../dist/rbac` | ESM output or stale cache | Rebuild with `--no-cache`; package `type: commonjs` |
+| `packages/db` not found | Wrong path name | Use `packages/database` only |
+| API container missing | Build failed / wrong compose file | Use `docker-compose.yml` (includes `api` service) |
+| Only postgres + redis running | Old `docker-compose.yml` | Pull latest; `docker compose up -d` |

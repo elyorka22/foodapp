@@ -1,23 +1,42 @@
+# syntax=docker/dockerfile:1
 FROM node:20-alpine AS base
 WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
 
 FROM base AS deps
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json .npmrc ./
 COPY workers/package.json ./workers/
 COPY packages/database/package.json ./packages/database/
-RUN npm ci --workspace=foodmarket-workers --workspace=@foodmarket/database --include-workspace-root 2>/dev/null || npm install --workspace=foodmarket-workers --workspace=@foodmarket/database --include-workspace-root
+COPY packages/shared-types/package.json ./packages/shared-types/
+RUN npm ci \
+  --workspace=foodmarket-workers \
+  --workspace=@foodmarket/database \
+  --workspace=@foodmarket/shared-types \
+  --include-workspace-root
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run db:generate 2>/dev/null || true
+COPY package.json package-lock.json .npmrc tsconfig.base.json ./
+COPY workers ./workers
+COPY packages/database ./packages/database
+COPY packages/shared-types ./packages/shared-types
+
+RUN npm run build -w @foodmarket/shared-types
+RUN npm run build -w @foodmarket/database
 RUN npm run build -w foodmarket-workers
 
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=builder /app/workers/dist ./workers/dist
-COPY --from=builder /app/workers/package.json ./workers/
+
+COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/database ./packages/database
+COPY --from=builder /app/workers/dist ./workers/dist
+COPY --from=builder /app/workers/package.json ./workers/package.json
+COPY --from=builder /app/packages/database/package.json ./packages/database/package.json
+COPY --from=builder /app/packages/database/dist ./packages/database/dist
+COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
+COPY --from=builder /app/packages/shared-types/package.json ./packages/shared-types/package.json
+COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
+
 CMD ["node", "workers/dist/index.js"]

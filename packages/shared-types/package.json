@@ -16,8 +16,8 @@
   },
   "files": ["dist", "src"],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "lint": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {

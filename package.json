@@ -21,7 +21,9 @@
     "db:migrate": "npm run migrate:dev -w @foodmarket/database",
     "db:push": "npm run push -w @foodmarket/database",
     "db:seed": "npm run seed -w @foodmarket/database",
-    "docker:dev": "docker compose -f docker-compose.yml up -d",
+    "docker:dev": "docker compose up -d",
+    "docker:backend": "docker compose up -d --build",
+    "docker:backend:build": "docker compose build --no-cache api",
     "docker:prod": "docker compose -f docker-compose.prod.yml up -d --build",
     "docker:web": "docker compose -f docker-compose.frontend.yml up -d --build"
   },
