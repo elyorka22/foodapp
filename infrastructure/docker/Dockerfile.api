@@ -6,6 +6,7 @@ RUN apk add --no-cache openssl libc6-compat
 
 # ─── Install dependencies (workspace-linked) ─────────────────────────────────
 FROM base AS deps
+RUN apk add --no-cache --virtual .build-deps python3 make g++
 COPY package.json package-lock.json .npmrc ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/database/package.json ./packages/database/
@@ -31,7 +32,8 @@ RUN npm run build -w @foodmarket/shared-types \
 RUN npm run build -w @foodmarket/database \
   && test -f packages/database/dist/index.js
 RUN npm run build -w @foodmarket/api \
-  && test -f apps/api/dist/main.js
+  && test -f apps/api/dist/main.js \
+  && node -e "require.resolve('sharp')"
 
 # ─── Production runtime ───────────────────────────────────────────────────────
 FROM node:20-alpine AS runner
@@ -39,12 +41,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=4000
 
-RUN apk add --no-cache openssl libc6-compat \
+RUN apk add --no-cache openssl libc6-compat vips \
   && addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nestjs
 
 # API bundle
 COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
 
 # Workspace packages (symlinks in node_modules point here)
 COPY --from=builder /app/package.json ./package.json
@@ -56,6 +59,7 @@ COPY --from=builder /app/packages/database/dist ./packages/database/dist
 COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
 
 RUN mkdir -p uploads && chown -R nestjs:nodejs uploads
+ENV NODE_PATH=/app/node_modules:/app/apps/api/node_modules
 USER nestjs
 EXPOSE 4000
 
