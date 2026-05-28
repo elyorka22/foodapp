@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CourierStatus, UserRole } from '@prisma/client';
 import { CouriersService } from './couriers.service';
@@ -59,6 +59,19 @@ export class CouriersController {
   @ApiBearerAuth()
   route(@CurrentUser() user: { id: string }, @Query('hours') hours?: number) {
     return this.couriers.getByUserId(user.id).then((c) => this.couriers.getRouteHistory(c.id, Number(hours) || 24));
+  }
+
+  @Post('me/location')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.COURIER)
+  @ApiBearerAuth()
+  reportLocation(
+    @CurrentUser() user: { id: string },
+    @Body() body: { latitude: number; longitude: number; orderId?: string },
+  ) {
+    return this.couriers
+      .getByUserId(user.id)
+      .then((c) => this.couriers.reportLocation(c.id, body.latitude, body.longitude, body.orderId));
   }
 
   @Patch(':id/status')

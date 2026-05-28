@@ -7,7 +7,7 @@ import { getAdminNav } from '@/lib/admin-nav';
 import { orderStatus, t } from '@/i18n';
 import { checkCriticalAlert } from '@/lib/ops-alerts';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from '@/lib/api';
 
 type UrgencyLevel = 'normal' | 'warning' | 'critical';
 
@@ -115,7 +115,7 @@ export default function OpsLivePage() {
   const authFetch = useCallback(async (path: string, init?: RequestInit) => {
     const accessToken = token();
     if (!accessToken) throw new Error(t('admin.ops.loginRequired'));
-    const res = await fetch(`${API}${path}`, {
+    const res = await fetch(`${API_URL}${path}`, {
       ...init,
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', ...init?.headers },
     });

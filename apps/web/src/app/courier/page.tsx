@@ -1,9 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { Button, Badge } from '@foodmarket/ui';
-import { api, formatUzs, getToken, WS } from '@/lib/api';
+import { api, formatUzs, getToken } from '@/lib/api';
 import { queueLocation, flushQueue, queueSize } from '@/lib/offline-queue';
 import { useOnlineStatus } from '@foodmarket/ui';
 import { orderStatus, t } from '@/i18n';
@@ -24,6 +23,13 @@ interface ActiveOrder {
   restaurant?: { name: string };
 }
 
+async function postLocation(lat: number, lng: number, orderId?: string) {
+  await api('/couriers/me/location', {
+    method: 'POST',
+    body: JSON.stringify({ latitude: lat, longitude: lng, orderId }),
+  });
+}
+
 export default function CourierPanel() {
   const [profile, setProfile] = useState<CourierProfile | null>(null);
   const [orders, setOrders] = useState<ActiveOrder[]>([]);
@@ -31,7 +37,6 @@ export default function CourierPanel() {
   const [online, setOnline] = useState(false);
   const [lastPing, setLastPing] = useState<string | null>(null);
   const [queuedCount, setQueuedCount] = useState(0);
-  const socketRef = useRef<Socket | null>(null);
   const watchRef = useRef<number | null>(null);
   const isOnline = useOnlineStatus();
 
@@ -56,84 +61,60 @@ export default function CourierPanel() {
   }, [load]);
 
   const sendLocation = useCallback(
-    (lat: number, lng: number, orderId?: string) => {
+    async (lat: number, lng: number, orderId?: string) => {
       if (!profile) return;
-      const payload = { courierId: profile.id, latitude: lat, longitude: lng, orderId };
-      if (!socketRef.current?.connected || !navigator.onLine) {
-        queueLocation(payload);
+      if (!navigator.onLine) {
+        queueLocation({ courierId: profile.id, latitude: lat, longitude: lng, orderId });
         setQueuedCount(queueSize());
         return;
       }
-      socketRef.current.emit('courier:location', payload);
-      setLastPing(new Date().toLocaleTimeString('uz-UZ'));
+      try {
+        await postLocation(lat, lng, orderId);
+        setLastPing(new Date().toLocaleTimeString('uz-UZ'));
+        setQueuedCount(0);
+      } catch {
+        queueLocation({ courierId: profile.id, latitude: lat, longitude: lng, orderId });
+        setQueuedCount(queueSize());
+      }
     },
     [profile],
   );
 
   useEffect(() => {
     if (!online || !profile) {
-      socketRef.current?.disconnect();
       if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
       return;
     }
 
-    const socket = io(`${WS}/tracking`, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionDelay: 2000,
-    });
-    socketRef.current = socket;
-
-    socket.on('connect', () => {
-      api(`/couriers/${profile.id}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'AVAILABLE' }),
-      }).catch(() => {});
-      flushQueue(
-        (item) => {
-          socket.emit('courier:location', {
+    flushQueue(
+      (item) =>
+        postLocation(item.latitude, item.longitude, item.orderId).catch(() => {
+          queueLocation({
             courierId: item.courierId,
             latitude: item.latitude,
             longitude: item.longitude,
             orderId: item.orderId,
-            clientTs: item.ts,
           });
-        },
-        { delayMs: 150 },
-      );
-    });
+        }),
+      { delayMs: 200 },
+    ).then(() => setQueuedCount(queueSize()));
 
-    socket.on('disconnect', () => {
-      socket.io.opts.transports = ['polling', 'websocket'];
-    });
-
-    const pollFallback = setInterval(() => {
-      if (!socket.connected) load();
-    }, 15000);
+    const pollOrders = setInterval(load, 15000);
 
     if ('geolocation' in navigator) {
       watchRef.current = navigator.geolocation.watchPosition(
         (pos) => {
           const activeOrder = orders[0];
-          sendLocation(pos.coords.latitude, pos.coords.longitude, activeOrder?.id);
+          void sendLocation(pos.coords.latitude, pos.coords.longitude, activeOrder?.id);
         },
         () => {},
         { enableHighAccuracy: false, maximumAge: 10000, timeout: 15000 },
       );
-    } else {
-      const interval = setInterval(() => {
-        sendLocation(41.2995 + (Math.random() - 0.5) * 0.008, 69.24 + (Math.random() - 0.5) * 0.008, orders[0]?.id);
-      }, 8000);
-      return () => {
-        clearInterval(interval);
-        socket.disconnect();
-      };
     }
 
     return () => {
-      clearInterval(pollFallback);
+      clearInterval(pollOrders);
       if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
-      socket.disconnect();
     };
   }, [online, profile, orders, sendLocation, load]);
 

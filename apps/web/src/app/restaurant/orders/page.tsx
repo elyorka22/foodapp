@@ -5,7 +5,7 @@ import { Sidebar, Badge, Button } from '@foodmarket/ui';
 import { getRestaurantNav } from '@/lib/restaurant-nav';
 import { orderStatus, t } from '@/i18n';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from '@/lib/api';
 
 const STATUS_FLOW: Record<string, string> = {
   PENDING: 'CONFIRMED',
@@ -34,7 +34,7 @@ export default function RestaurantOrdersPage() {
   async function load() {
     const token = getToken();
     if (!token) return;
-    const res = await fetch(`${API}/orders?limit=30`, {
+    const res = await fetch(`${API_URL}/orders?limit=30`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return;
@@ -58,7 +58,7 @@ export default function RestaurantOrdersPage() {
 
   async function advance(id: string, status: string) {
     const token = getToken();
-    await fetch(`${API}/orders/${id}/status`, {
+    await fetch(`${API_URL}/orders/${id}/status`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),

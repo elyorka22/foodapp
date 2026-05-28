@@ -1,5 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-export const WS = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:4000';
+function resolveApiUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
+  if (fromEnv) return fromEnv;
+  return 'https://api.foodapp.uz/api/v1';
+}
+
+export const API_URL = resolveApiUrl();
 
 export function formatUzs(amount: number) {
   return `${Math.round(amount).toLocaleString('uz-UZ')} so'm`;

@@ -5,7 +5,7 @@ import { Sidebar, Button, Input } from '@foodmarket/ui';
 import { getAdminNav } from '@/lib/admin-nav';
 import { t } from '@/i18n';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from '@/lib/api';
 
 type Severity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 type Status = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'DISMISSED';
@@ -45,7 +45,7 @@ export default function IncidentsPage() {
   const token = () => localStorage.getItem('accessToken');
 
   const fetchApi = useCallback(async (path: string, init?: RequestInit) => {
-    const res = await fetch(`${API}${path}`, {
+    const res = await fetch(`${API_URL}${path}`, {
       ...init,
       headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json', ...init?.headers },
     });

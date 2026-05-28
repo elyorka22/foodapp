@@ -58,7 +58,7 @@ async function bootstrap() {
 
   const port = config.get<number>('PORT', 4000);
   await app.listen(port);
-  bootLogger.log(`API http://localhost:${port}/${config.get('API_PREFIX', 'api/v1')}`);
+  bootLogger.log(`API started on port ${port} with prefix /${config.get('API_PREFIX', 'api/v1')}`);
 
   const shutdown = async (signal: string) => {
     bootLogger.log(`${signal} — graceful shutdown`);

@@ -5,27 +5,19 @@ import { Sidebar } from '@foodmarket/ui';
 import { getAdminNav } from '@/lib/admin-nav';
 import { t } from '@/i18n';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from '@/lib/api';
 
 interface Observability {
-  http: { uptimeSec: number; totalRequests: number; totalErrors: number; memory: { heapUsedMb: number; rssMb: number } };
-  websocket: {
-    activeConnections: number;
-    peakConnections: number;
-    reconnectsLast5Min: number;
-    reconnectSpike: boolean;
-    duplicateSkipped: number;
-    rejectedGps: number;
-  };
-  slowQueries: { thresholdMs: number; count: number; recent: { model: string; action: string; durationMs: number }[] };
-  redis: { ok: boolean };
+  http: { uptimeSec: number; totalRequests: number; totalErrors: number; memory: { heapUsedMb: number; rssMb?: number } };
+  slowQueries: { thresholdMs: number; count?: number; recent: { model: string; action: string; durationMs: number }[] };
+  redis: { ok: boolean; mode?: string };
   queues: {
     orders: Record<string, number>;
     notifications: Record<string, number>;
     telegram: Record<string, number>;
-    latencyHint: { waitingHigh: boolean; failedJobs: number };
+    disabled?: boolean;
+    latencyHint?: { waitingHigh: boolean; failedJobs: number };
   };
-  infrastructure: Record<string, unknown>;
 }
 
 export default function ObservabilityPage() {
@@ -34,7 +26,7 @@ export default function ObservabilityPage() {
   const load = useCallback(async () => {
     const accessToken = localStorage.getItem('accessToken');
     if (!accessToken) return;
-    const res = await fetch(`${API}/monitoring/observability`, {
+    const res = await fetch(`${API_URL}/monitoring/observability`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (res.ok) setData(await res.json());
@@ -62,22 +54,14 @@ export default function ObservabilityPage() {
               <Row label={t('admin.observability.requests')} value={String(data.http.totalRequests)} />
               <Row label={t('admin.observability.errors')} value={String(data.http.totalErrors)} />
               <Row label={t('admin.observability.heap')} value={`${data.http.memory.heapUsedMb} MB`} />
-              <Row label="RSS" value={`${data.http.memory.rssMb} MB`} />
-            </Card>
-
-            <Card title={t('admin.observability.websocket')} alert={data.websocket.reconnectSpike}>
-              <Row label={t('admin.observability.activeConn')} value={String(data.websocket.activeConnections)} />
-              <Row label={t('admin.observability.peak')} value={String(data.websocket.peakConnections)} />
-              <Row label={t('admin.observability.reconnect5m')} value={String(data.websocket.reconnectsLast5Min)} />
-              <Row label={t('admin.observability.gpsRejected')} value={String(data.websocket.rejectedGps)} />
-              <Row label={t('admin.observability.dupSkipped')} value={String(data.websocket.duplicateSkipped)} />
             </Card>
 
             <Card title={t('admin.observability.redis')} alert={!data.redis.ok}>
               <Row label={t('admin.observability.status')} value={data.redis.ok ? 'OK' : 'DOWN'} />
+              {data.redis.mode && <Row label="Mode" value={data.redis.mode} />}
             </Card>
 
-            <Card title={t('admin.observability.queueOrders')} alert={data.queues.latencyHint.waitingHigh}>
+            <Card title={t('admin.observability.queueOrders')} alert={data.queues.latencyHint?.waitingHigh}>
               <QueueRows counts={data.queues.orders} />
             </Card>
             <Card title={t('admin.observability.queueNotifications')}>
@@ -103,11 +87,6 @@ export default function ObservabilityPage() {
               )}
             </Card>
 
-            <Card title={t('admin.observability.infraReady')}>
-              {Object.entries(data.infrastructure).map(([k, v]) => (
-                <Row key={k} label={k} value={String(v ?? '—')} />
-              ))}
-            </Card>
           </div>
         )}
       </main>

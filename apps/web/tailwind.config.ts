@@ -27,7 +27,7 @@ const config: Config = {
         soft: '0 4px 14px 0 rgb(0 0 0 / 0.08)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
     },
   },

@@ -1,3 +1,63 @@
-# Alias for backend droplet — same stack as docker-compose.yml
-include:
-  - docker-compose.yml
+# BACKEND DROPLET — NestJS API + PostgreSQL only
+# Deploy: docker compose -f docker-compose.backend.yml up -d --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: foodapp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-foodapp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-foodapp}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-foodapp}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+      ignore: infrastructure/docker/backend.dockerignore
+    container_name: foodapp-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-foodapp}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-foodapp}?schema=public
+    ports:
+      - '4000:4000'
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://127.0.0.1:4000/api/v1/health/live',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+volumes:
+  postgres_data:
+  uploads_data:
+
+networks:
+  backend:
+    driver: bridge

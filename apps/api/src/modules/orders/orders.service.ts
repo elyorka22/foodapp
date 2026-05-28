@@ -1,14 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
 import { OrderStatus, Prisma, PromoType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { DeliveryService } from '../delivery/delivery.service';
 import { PromosService } from '../promos/promos.service';
 import { TelegramService, formatUzs } from '../telegram/telegram.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { AuditService } from '../../common/services/audit.service';
 import { isVendorOpen } from '../../common/utils/vendor-hours';
-import { TrackingGateway } from '../../gateways/tracking.gateway';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { CancelOrderDto } from './dto/cancel-order.dto';
@@ -36,11 +34,8 @@ export class OrdersService {
     private delivery: DeliveryService,
     private promos: PromosService,
     private telegram: TelegramService,
+    private notifications: NotificationsService,
     private audit: AuditService,
-    private tracking: TrackingGateway,
-    @InjectQueue('orders') private ordersQueue: Queue,
-    @InjectQueue('notifications') private notificationsQueue: Queue,
-    @InjectQueue('telegram') private telegramQueue: Queue,
   ) {}
 
   async create(dto: CreateOrderDto, customerId?: string) {
@@ -342,7 +337,6 @@ export class OrdersService {
       });
     }
 
-    this.tracking.emitOrderStatus(id, dto.status, { orderNumber: updated.orderNumber });
     await this.audit.log({
       actorId,
       actorRole: actorRole as never,
@@ -352,7 +346,6 @@ export class OrdersService {
       metadata: { from: order.status, to: dto.status },
     });
 
-    await this.ordersQueue.add('status-changed', { orderId: id, status: dto.status });
     await this.postOrderEvents(updated, 'order.status');
 
     return updated;
@@ -372,11 +365,10 @@ export class OrdersService {
       where: { id: courierId },
       data: { status: 'ON_DELIVERY' },
     });
-    await this.telegramQueue.add('send', {
-      event: 'courier.assigned',
-      text: `🚴 Kuryer tayinlandi\n${order.orderNumber}\n${order.courier?.user.firstName ?? ''}`,
-    });
-    this.tracking.emitOrderStatus(orderId, OrderStatus.COURIER_ASSIGNED);
+    void this.telegram.send(
+      'courier.assigned',
+      `🚴 Kuryer tayinlandi\n${order.orderNumber}\n${order.courier?.user.firstName ?? ''}`,
+    );
     return order;
   }
 
@@ -393,30 +385,29 @@ export class OrdersService {
     },
     type: string,
   ) {
-    await this.ordersQueue.add(type, { orderId: order.id, status: order.status });
     const vendorName = order.restaurant?.name ?? order.business?.name;
     const address = order.deliveryAddress
       ? `${order.deliveryAddress.street}, ${order.deliveryAddress.city}`
       : undefined;
 
-    await this.telegramQueue.add('send', {
-      event: type === 'order.new' ? 'order.new' : 'order.status',
-      text: this.telegram.formatOrderAlert({
+    void this.telegram.send(
+      type === 'order.new' ? 'order.new' : 'order.status',
+      this.telegram.formatOrderAlert({
         orderNumber: order.orderNumber,
         total: order.total,
         status: order.status,
         vendorName,
         address,
       }),
-    });
+    );
 
     if (order.customerId) {
-      await this.notificationsQueue.add('push', {
-        userId: order.customerId,
-        title: type === 'order.new' ? 'Buyurtma qabul qilindi' : 'Buyurtma yangilandi',
-        body: `${order.orderNumber}: ${order.status}`,
-        data: { orderId: order.id, status: order.status },
-      });
+      await this.notifications.createInApp(
+        order.customerId,
+        type === 'order.new' ? 'Buyurtma qabul qilindi' : 'Buyurtma yangilandi',
+        `${order.orderNumber}: ${order.status}`,
+        { orderId: order.id, status: order.status },
+      );
     }
   }
 }

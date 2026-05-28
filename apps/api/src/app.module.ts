@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ScheduleModule } from '@nestjs/schedule';
-import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { OpsModule } from './modules/ops/ops.module';
@@ -16,7 +14,6 @@ import { BusinessesModule } from './modules/businesses/businesses.module';
 import { ProductsModule } from './modules/products/products.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { CouriersModule } from './modules/couriers/couriers.module';
-import { TrackingModule } from './gateways/tracking.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { PromosModule } from './modules/promos/promos.module';
@@ -32,22 +29,14 @@ import { AdminModule } from './modules/admin/admin.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       { name: 'default', ttl: 60000, limit: 100 },
       { name: 'auth', ttl: 60000, limit: 15 },
       { name: 'upload', ttl: 60000, limit: 20 },
     ]),
-    BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      },
-    }),
     CommonModule,
     TelegramModule,
     PrismaModule,
-    TrackingModule,
     HealthModule,
     AuthModule,
     UsersModule,

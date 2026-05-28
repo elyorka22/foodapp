@@ -28,13 +28,7 @@ export class HealthController {
       ok = false;
     }
 
-    try {
-      await this.redis.ping();
-      checks.redis = 'up';
-    } catch {
-      checks.redis = 'down';
-      ok = false;
-    }
+    checks.cache = 'memory';
 
     const mem = process.memoryUsage();
     return {

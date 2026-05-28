@@ -5,7 +5,7 @@ import { Sidebar, Button, Input } from '@foodmarket/ui';
 import { getRestaurantNav } from '@/lib/restaurant-nav';
 import { t } from '@/i18n';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from '@/lib/api';
 
 interface Product {
   id: string;
@@ -23,13 +23,13 @@ export default function MenuPage() {
   const token = () => localStorage.getItem('accessToken');
 
   useEffect(() => {
-    fetch(`${API}/restaurants?limit=1`)
+    fetch(`${API_URL}/restaurants?limit=1`)
       .then((r) => r.json())
       .then((d) => {
         const id = d.items?.[0]?.id;
         if (id) {
           setRestaurantId(id);
-          return fetch(`${API}/products?restaurantId=${id}`).then((r) => r.json());
+          return fetch(`${API_URL}/products?restaurantId=${id}`).then((r) => r.json());
         }
       })
       .then((list) => setProducts(list ?? []))
@@ -37,7 +37,7 @@ export default function MenuPage() {
   }, []);
 
   async function toggle(id: string, available: boolean) {
-    await fetch(`${API}/products/${id}`, {
+    await fetch(`${API_URL}/products/${id}`, {
       method: 'PATCH',
       headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ isAvailable: !available }),
@@ -47,14 +47,14 @@ export default function MenuPage() {
 
   async function addProduct() {
     if (!name || !price || !restaurantId) return;
-    await fetch(`${API}/products`, {
+    await fetch(`${API_URL}/products`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, price: parseFloat(price), restaurantId, isAvailable: true }),
     });
     setName('');
     setPrice('');
-    const list = await fetch(`${API}/products?restaurantId=${restaurantId}`).then((r) => r.json());
+    const list = await fetch(`${API_URL}/products?restaurantId=${restaurantId}`).then((r) => r.json());
     setProducts(list);
   }
 

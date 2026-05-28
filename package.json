@@ -5,8 +5,7 @@
   "description": "Multi-vendor food delivery and grocery marketplace",
   "workspaces": [
     "apps/*",
-    "packages/*",
-    "workers"
+    "packages/*"
   ],
   "scripts": {
     "dev": "turbo run dev",
@@ -21,11 +20,10 @@
     "db:migrate": "npm run migrate:dev -w @foodmarket/database",
     "db:push": "npm run push -w @foodmarket/database",
     "db:seed": "npm run seed -w @foodmarket/database",
-    "docker:dev": "docker compose up -d",
-    "docker:backend": "docker compose up -d --build",
-    "docker:backend:build": "docker compose build --no-cache api",
-    "docker:prod": "docker compose -f docker-compose.prod.yml up -d --build",
-    "docker:web": "docker compose -f docker-compose.frontend.yml up -d --build"
+    "docker:backend": "docker compose -f docker-compose.backend.yml up -d --build",
+    "docker:backend:build": "docker compose -f docker-compose.backend.yml build --no-cache api",
+    "docker:frontend": "docker compose -f docker-compose.frontend.yml up -d --build",
+    "docker:frontend:build": "docker compose -f docker-compose.frontend.yml build --no-cache web"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

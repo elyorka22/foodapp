@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Sidebar } from '@foodmarket/ui';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from '@/lib/api';
 import { getAdminNav } from '@/lib/admin-nav';
 import { t } from '@/i18n';
 
@@ -42,7 +42,7 @@ export default function AnalyticsPage() {
   const load = useCallback(async () => {
     const accessToken = localStorage.getItem('accessToken');
     if (!accessToken) return;
-    const res = await fetch(`${API}/analytics/operations`, { headers: { Authorization: `Bearer ${accessToken}` } });
+    const res = await fetch(`${API_URL}/analytics/operations`, { headers: { Authorization: `Bearer ${accessToken}` } });
     if (res.ok) setData(await res.json());
   }, []);
 

@@ -16,6 +16,11 @@ RUN npm ci \
   --include-workspace-root
 
 FROM base AS builder
+# NEXT_PUBLIC_* must be set at build time — they are inlined into the client bundle.
+ARG NEXT_PUBLIC_API_URL=https://api.foodapp.uz/api/v1
+ARG NEXT_PUBLIC_APP_URL=https://foodapp.uz
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY apps/web ./apps/web

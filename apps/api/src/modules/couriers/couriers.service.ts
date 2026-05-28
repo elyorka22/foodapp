@@ -32,6 +32,26 @@ export class CouriersService {
     });
   }
 
+  async reportLocation(
+    courierId: string,
+    latitude: number,
+    longitude: number,
+    orderId?: string,
+  ) {
+    await this.prisma.courier.update({
+      where: { id: courierId },
+      data: {
+        currentLat: latitude,
+        currentLng: longitude,
+        status: CourierStatus.ON_DELIVERY,
+      },
+    });
+    await this.prisma.courierLocation.create({
+      data: { courierId, latitude, longitude },
+    });
+    return { ok: true, orderId: orderId ?? null };
+  }
+
   async getActiveOrders(courierId: string) {
     return this.prisma.order.findMany({
       where: {

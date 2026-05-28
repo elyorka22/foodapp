@@ -1,11 +1,9 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
 import { OrderStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OrdersService } from '../orders/orders.service';
 import { AuditService } from '../../common/services/audit.service';
-import { TrackingGateway } from '../../gateways/tracking.gateway';
+import { TelegramService } from '../telegram/telegram.service';
 import { DispatchService } from '../dispatch/dispatch.service';
 import { IncidentsService } from './incidents.service';
 import { orderUrgency } from '../../common/utils/order-urgency';
@@ -19,10 +17,7 @@ export class OpsService {
     private audit: AuditService,
     private dispatch: DispatchService,
     private incidentsService: IncidentsService,
-    private tracking: TrackingGateway,
-    @InjectQueue('telegram') private telegramQueue: Queue,
-    @InjectQueue('orders') private ordersQueue: Queue,
-    @InjectQueue('notifications') private notificationsQueue: Queue,
+    private telegram: TelegramService,
   ) {}
 
   async operationsHub() {
@@ -169,15 +164,12 @@ export class OpsService {
   }
 
   async queueSnapshot() {
-    const [ordersQ, notifQ, telegramQ] = await Promise.all([
-      this.ordersQueue.getJobCounts(),
-      this.notificationsQueue.getJobCounts(),
-      this.telegramQueue.getJobCounts(),
-    ]);
+    const empty = { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0 };
     return {
-      orders: ordersQ,
-      notifications: notifQ,
-      telegram: telegramQ,
+      orders: empty,
+      notifications: empty,
+      telegram: empty,
+      disabled: true,
       checkedAt: new Date().toISOString(),
     };
   }
@@ -204,7 +196,6 @@ export class OpsService {
       },
     });
     await this.logOps(actorId, 'ops.courier.reassign', orderId, { courierId, note });
-    this.tracking.emitOrderStatus(orderId, OrderStatus.COURIER_ASSIGNED);
     return this.orders.findOne(orderId);
   }
 
@@ -227,7 +218,6 @@ export class OpsService {
       },
     });
     await this.logOps(actorId, 'ops.order.retry_delivery', orderId, { note });
-    this.tracking.emitOrderStatus(orderId, OrderStatus.READY_FOR_PICKUP);
     return this.orders.findOne(orderId);
   }
 
@@ -239,10 +229,7 @@ export class OpsService {
       UserRole.ADMIN,
     );
     await this.logOps(actorId, 'ops.order.emergency_cancel', orderId, { reason });
-    await this.telegramQueue.add('send', {
-      event: 'admin.alert',
-      text: `🚨 Bekor qilindi (OPS)\n${order.orderNumber}\n${reason}`,
-    });
+    void this.telegram.send('admin.alert', `🚨 Bekor qilindi (OPS)\n${order.orderNumber}\n${reason}`);
     return order;
   }
 
@@ -270,7 +257,6 @@ export class OpsService {
       },
       actorId,
     );
-    this.tracking.emitOrderStatus(orderId, OrderStatus.CANCELLED);
     return this.orders.findOne(orderId);
   }
 

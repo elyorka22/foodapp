@@ -1,7 +1,7 @@
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { API_URL } from './api';
 
 export async function panelApi<T>(path: string, token?: string): Promise<T> {
-  const res = await fetch(`${API}${path}`, {
+  const res = await fetch(`${API_URL}${path}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     cache: 'no-store',
   });

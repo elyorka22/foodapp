@@ -1,70 +1,40 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import Redis from 'ioredis';
+import { Injectable } from '@nestjs/common';
 
+type MemoryEntry = { value: string; expiresAt: number };
+
+/** In-memory cache for MVP (no Redis container required). */
 @Injectable()
-export class RedisCacheService implements OnModuleDestroy {
-  private client: Redis | null = null;
-
-  constructor(private config: ConfigService) {}
-
-  private getClient(): Redis {
-    if (!this.client) {
-      const url = this.config.get('REDIS_URL');
-      this.client = url
-        ? new Redis(url)
-        : new Redis({
-            host: this.config.get('REDIS_HOST', 'localhost'),
-            port: parseInt(this.config.get('REDIS_PORT', '6379'), 10),
-          });
-    }
-    return this.client;
-  }
+export class RedisCacheService {
+  private readonly memory = new Map<string, MemoryEntry>();
 
   async get<T>(key: string): Promise<T | null> {
-    try {
-      const raw = await this.getClient().get(key);
-      return raw ? (JSON.parse(raw) as T) : null;
-    } catch {
+    const row = this.memory.get(key);
+    if (!row || row.expiresAt < Date.now()) {
+      this.memory.delete(key);
       return null;
     }
+    return JSON.parse(row.value) as T;
   }
 
   async set(key: string, value: unknown, ttlSeconds = 300): Promise<void> {
-    try {
-      await this.getClient().setex(key, ttlSeconds, JSON.stringify(value));
-    } catch {
-      /* cache optional */
-    }
+    this.memory.set(key, {
+      value: JSON.stringify(value),
+      expiresAt: Date.now() + ttlSeconds * 1000,
+    });
   }
 
   async del(key: string): Promise<void> {
-    try {
-      await this.getClient().del(key);
-    } catch {
-      /* ignore */
-    }
+    this.memory.delete(key);
   }
 
   async delPattern(pattern: string): Promise<void> {
-    try {
-      const keys = await this.getClient().keys(pattern);
-      if (keys.length) await this.getClient().del(...keys);
-    } catch {
-      /* ignore */
+    const prefix = pattern.replace('*', '');
+    for (const key of [...this.memory.keys()]) {
+      if (key.startsWith(prefix)) this.memory.delete(key);
     }
   }
 
   async ping(): Promise<boolean> {
-    try {
-      const pong = await this.getClient().ping();
-      return pong === 'PONG';
-    } catch {
-      return false;
-    }
-  }
-
-  onModuleDestroy() {
-    this.client?.disconnect();
+    return true;
   }
 }
